@@ -1,14 +1,15 @@
-# Chain Builder (governance authority) onboarding
+# Chain Builder (Governance Authority) Onboarding
 
 Partner Chain builders are organizations that want to build their own blockchains according to their business cases. They are the governance authorities for their new chains. They can utilize the Partner Chains toolkit and other tools to build and run a separate blockchain that can be interoperable with the Cardano network. Each builder can have their own operation and business model. The Partner Chain toolkit aims to be versatile enough to support a wide range of use cases.
 
 ## Order of Operations
 1. Install dependencies
-    1. Cardano node v9.1.0
-        1. Ogmios v6.5.0
-        2. Kupo - v2.9.0
-        3. DB Sync  v13.3.0.0 (PostgreSQLv15.3)
-    2. Download the partner chain node v1.0
+    1. [Cardano Node v9.1.0](https://github.com/IntersectMBO/cardano-node/tree/9.1.0)
+        1. [Ogmios v6.5.0](https://github.com/CardanoSolutions/ogmios/tree/v6.5.0)
+        2. [Kupo v2.9.0](https://github.com/CardanoSolutions/kupo/tree/v2.9.0)
+        3. [DB Sync v13.3.0.0](https://github.com/IntersectMBO/cardano-db-sync/tree/13.3.0.0)
+        4. PostgreSQLv15.3
+    2. [Partner Chains Node v1.0.0](https://github.com/input-output-hk/partner-chains/releases/tag/v1.0.0)
 2. Run the generate-keys wizard
 3. Run the prepare-configuration wizard
     1. Set chain parameters
@@ -17,6 +18,9 @@ Partner Chain builders are organizations that want to build their own blockchain
 5. Run the setup-main-chain-state wizard
 6. Run the start-node wizard
 7. Distribute chain files to participants
+
+> [!NOTE]
+> Due to a dependency on `sidechain-main-cli` this guide is for [release package](https://github.com/input-output-hk/partner-chains/releases/tag/v1.0.0) only and will *not* work for [source](https://github.com/input-output-hk/partner-chains) built versions.
 
 ### 1. Install Partner Chains dependencies
 
@@ -267,35 +271,35 @@ Now the wizard will output `partner-chains-public-keys.json` containing three ke
 
 Before running this wizard, be sure that `cardano-cli` is available and has an exposed socket to a running `cardano-node`.
 
-1. Start the wizard:`./partner-chains-cli prepare-configuration`
-2. Update the bootnodes array and provide public ip or hostname
-3. Set the partner-chains parameters
-4. Store the main chain configuration
+1. Start the wizard: ```./partner-chains-cli prepare-configuration``` and when prompted:
+   * Confirm node base path
+   * Provide public ip or hostname
+   * Provide TCP port
+   * Confirm governance authority
+   * Provide chain ID
+> [!NOTE]
+> The wizard asks for the chain ID, informing you that the pair (governance authority, chain id) identifies a partner chain. It has to be unique, and allowable values are in the range of [0; 65535]. The chain config field chain_parameters.chain_id is used as default (and target value). 0 is the default.
 
-This wizard will result in a `partner-chains-cli-chain-config.json` file. After it has been generated, it should be updated with your keys and the keys of other *permissioned* candidates in the `initial_permissioned_candidates` array.
-
-Example:
-
-```
-    "initial_permissioned_candidates": [
-		  {
-			  "aura_pub_key": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
-			  "grandpa_pub_key": "0x88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee",
-			  "sidechain_pub_key": "0x020a1091341fe5664bfa1782d5e04779689068c916b04cb365ec3153755684d9a1"
-			},
-			{
-			  "aura_pub_key": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
-			  "grandpa_pub_key": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
-			  "sidechain_pub_key": "0x0390084fdbf27d2b79d26a4f13f0ccd982cb755a661969143c37cbc49ef5b91f27"
-			}
-	  ],
-```
+2. The `partner-chains-cli-chain-config.json` file will be generated.
+> [!NOTE]
+> This will contain your keys and the keys of other *permissioned* candidates in the `initial_permissioned_candidates` array.
+> Example:
+> ```
+>    "initial_permissioned_candidates": [
+> 		  {
+>			  "aura_pub_key": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+>			  "grandpa_pub_key": "0x88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee",
+>			  "sidechain_pub_key": "0x020a1091341fe5664bfa1782d5e04779689068c916b04cb365ec3153755684d9a1"
+>			},
+>			{
+>			  "aura_pub_key": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+>			  "grandpa_pub_key": "0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69",
+>			  "sidechain_pub_key": "0x0390084fdbf27d2b79d26a4f13f0ccd982cb755a661969143c37cbc49ef5b91f27"
+>			}
+>	  ],
+> ```
 
 #### Further notes from the prepare-configuration wizard
-
-##### Setting the partner chain parameters
-
-The wizard asks for the chain ID, informing you that the pair (governance authority, chain id) identifies a partner chain. It has to be unique, and allowable values are in the range of [0; 65535]. The chain config field `chain_parameters.chain_id` is used as default (and target value). 0 is the default.
 
 ##### Storing the main chain configuration
 
