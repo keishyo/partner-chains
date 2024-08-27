@@ -10,6 +10,7 @@ use main_chain_follower_mock::{
 	native_token::NativeTokenDataSourceMock,
 };
 use sc_service::error::Error as ServiceError;
+use sidechain_mc_hash::McHashDataSource;
 use sp_native_token_management::NativeTokenManagementDataSource;
 use std::error::Error;
 use std::sync::Arc;
@@ -17,6 +18,7 @@ use std::sync::Arc;
 #[derive(Clone)]
 pub struct DataSources {
 	pub block: Arc<dyn BlockDataSource + Send + Sync>,
+	pub mc_hash: Arc<dyn McHashDataSource<Error = DataSourceError> + Send + Sync>,
 	pub candidate: Arc<dyn CandidateDataSource + Send + Sync>,
 	pub native_token:
 		Arc<dyn NativeTokenManagementDataSource<Error = DataSourceError> + Send + Sync>,
@@ -52,6 +54,7 @@ pub fn create_mock_data_sources(
 ) -> std::result::Result<DataSources, Box<dyn Error + Send + Sync + 'static>> {
 	Ok(DataSources {
 		block: Arc::new(BlockDataSourceMock),
+		mc_hash: Arc::new(BlockDataSourceMock),
 		candidate: Arc::new(MockCandidateDataSource::from_env()?),
 		native_token: Arc::new(NativeTokenDataSourceMock::new()),
 	})
@@ -66,6 +69,12 @@ pub async fn create_cached_data_sources(
 	let mc_epoch_config = &db_sync_follower::data_sources::read_mc_epoch_config()?;
 	Ok(DataSources {
 		block: Arc::new(BlockDataSourceImpl::from_config(
+			pool.clone(),
+			DbSyncBlockDataSourceConfig::from_env()?,
+			mc_epoch_config,
+			metrics_opt.clone(),
+		)),
+		mc_hash: Arc::new(BlockDataSourceImpl::from_config(
 			pool.clone(),
 			DbSyncBlockDataSourceConfig::from_env()?,
 			mc_epoch_config,
