@@ -3,12 +3,15 @@
 use crate::inherent_data::CreateInherentDataConfig;
 use crate::main_chain_follower::DataSources;
 use crate::tests::runtime_api_mock::TestApi;
+use authority_selection_inherents::filter_invalid_candidates::RegisterValidatorSignedMessage;
+use authority_selection_inherents::mock::MockAuthoritySelectionDataSource;
 use chain_params::SidechainParams;
 use epoch_derivation::{EpochConfig, MainchainEpochConfig};
 use hex_literal::hex;
 use main_chain_follower_api::mock_services::TestDataSources;
 use sc_consensus_aura::SlotDuration;
 use sidechain_domain::*;
+use sidechain_mc_hash::mock::MockMcHashDataSource;
 use sidechain_slots::{ScSlotConfig, SlotsPerEpoch};
 use sp_core::offchain::{Duration, Timestamp};
 use sp_core::{ecdsa, ed25519, Pair};
@@ -20,6 +23,12 @@ impl From<TestDataSources> for DataSources {
 		Self {
 			block: value.block,
 			candidate: value.candidate,
+			mc_hash: Arc::new(MockMcHashDataSource::new(vec![])),
+			selection: Arc::new(MockAuthoritySelectionDataSource {
+				candidates: vec![],
+				permissioned_candidates: vec![],
+				_marker: Default::default(),
+			}),
 			native_token: Arc::new(MockNativeTokenDataSource::new([].into())),
 		}
 	}

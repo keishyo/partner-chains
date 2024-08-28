@@ -5,10 +5,11 @@
 
 use crate::candidates::CandidatesDataSourceImpl;
 use async_trait::async_trait;
+use authority_selection_inherents::authority_selection_inputs::AuthoritySelectionDataSource;
 use figment::{providers::Env, Figment};
 use log::info;
 use lru::LruCache;
-use main_chain_follower_api::{candidate::*, Result};
+use main_chain_follower_api::{candidate::*, DataSourceError, Result};
 use serde::Deserialize;
 use sidechain_domain::*;
 use std::{
@@ -70,6 +71,66 @@ impl CandidateDataSource for CandidateDataSourceCached {
 
 	async fn data_epoch(&self, for_epoch: McEpochNumber) -> Result<McEpochNumber> {
 		self.inner.data_epoch(for_epoch).await
+	}
+}
+
+#[async_trait]
+impl AuthoritySelectionDataSource for CandidateDataSourceCached {
+	type Error = DataSourceError;
+
+	async fn get_ariadne_parameters(
+		&self,
+		epoch_number: McEpochNumber,
+		d_parameter: PolicyId,
+		permissioned_candidates: PolicyId,
+	) -> std::result::Result<
+		authority_selection_inherents::authority_selection_inputs::AriadneParameters,
+		Self::Error,
+	> {
+		<Self as CandidateDataSource>::get_ariadne_parameters(
+			self,
+			epoch_number,
+			d_parameter,
+			permissioned_candidates,
+		)
+		.await
+		.map(|params| {
+			authority_selection_inherents::authority_selection_inputs::AriadneParameters {
+				d_parameter: params.d_parameter,
+				permissioned_candidates: params
+					.permissioned_candidates
+					.into_iter()
+					.map(|candidate| PermissionedCandidateData {
+						aura_public_key: candidate.aura_public_key,
+						grandpa_public_key: candidate.grandpa_public_key,
+						sidechain_public_key: candidate.sidechain_public_key,
+					})
+					.collect(),
+			}
+		})
+	}
+
+	async fn get_candidates(
+		&self,
+		epoch: McEpochNumber,
+		committee_candidate_address: MainchainAddress,
+	) -> std::result::Result<Vec<CandidateRegistrations>, Self::Error> {
+		<Self as CandidateDataSource>::get_candidates(self, epoch, committee_candidate_address)
+			.await
+	}
+
+	async fn get_epoch_nonce(
+		&self,
+		epoch: McEpochNumber,
+	) -> std::result::Result<Option<EpochNonce>, Self::Error> {
+		<Self as CandidateDataSource>::get_epoch_nonce(self, epoch).await
+	}
+
+	async fn data_epoch(
+		&self,
+		for_epoch: McEpochNumber,
+	) -> std::result::Result<McEpochNumber, Self::Error> {
+		<Self as CandidateDataSource>::data_epoch(self, for_epoch).await
 	}
 }
 

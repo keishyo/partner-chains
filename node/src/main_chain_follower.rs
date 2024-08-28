@@ -1,3 +1,4 @@
+use authority_selection_inherents::authority_selection_inputs::AuthoritySelectionDataSource;
 use db_sync_follower::native_token::NativeTokenManagementDataSourceImpl;
 use db_sync_follower::{
 	block::{BlockDataSourceImpl, DbSyncBlockDataSourceConfig},
@@ -19,6 +20,7 @@ use std::sync::Arc;
 pub struct DataSources {
 	pub block: Arc<dyn BlockDataSource + Send + Sync>,
 	pub mc_hash: Arc<dyn McHashDataSource<Error = DataSourceError> + Send + Sync>,
+	pub selection: Arc<dyn AuthoritySelectionDataSource<Error = DataSourceError> + Send + Sync>,
 	pub candidate: Arc<dyn CandidateDataSource + Send + Sync>,
 	pub native_token:
 		Arc<dyn NativeTokenManagementDataSource<Error = DataSourceError> + Send + Sync>,
@@ -55,6 +57,8 @@ pub fn create_mock_data_sources(
 	Ok(DataSources {
 		block: Arc::new(BlockDataSourceMock),
 		mc_hash: Arc::new(BlockDataSourceMock),
+		selection: todo!(),
+		// selection: Arc::new(MockAuthoritySelectionDataSource),
 		candidate: Arc::new(MockCandidateDataSource::from_env()?),
 		native_token: Arc::new(NativeTokenDataSourceMock::new()),
 	})
@@ -81,6 +85,10 @@ pub async fn create_cached_data_sources(
 			metrics_opt.clone(),
 		)),
 		candidate: Arc::new(CandidateDataSourceCached::new_from_env(
+			CandidatesDataSourceImpl::from_config(pool.clone(), metrics_opt.clone()).await?,
+			CANDIDATES_FOR_EPOCH_CACHE_SIZE,
+		)?),
+		selection: Arc::new(CandidateDataSourceCached::new_from_env(
 			CandidatesDataSourceImpl::from_config(pool.clone(), metrics_opt.clone()).await?,
 			CANDIDATES_FOR_EPOCH_CACHE_SIZE,
 		)?),

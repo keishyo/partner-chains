@@ -2,10 +2,9 @@ use crate::authority_selection_inputs::AuthoritySelectionInputs;
 use parity_scale_codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use {
+	crate::authority_selection_inputs::AuthoritySelectionDataSource,
 	crate::authority_selection_inputs::AuthoritySelectionInputsCreationError,
 	epoch_derivation::{EpochConfig, MainchainEpochDerivation},
-	main_chain_follower_api::CandidateDataSource,
-	main_chain_follower_api::DataSourceError,
 	sidechain_domain::*,
 	sidechain_slots::ScSlotConfig,
 	sp_api::ProvideRuntimeApi,
@@ -27,11 +26,14 @@ pub struct AriadneInherentDataProvider {
 
 #[cfg(feature = "std")]
 impl AriadneInherentDataProvider {
-	pub async fn from_mc_data(
-		candidate_data_source: &(dyn CandidateDataSource + Send + Sync),
+	pub async fn from_mc_data<E>(
+		candidate_data_source: &(dyn AuthoritySelectionDataSource<Error = E> + Send + Sync),
 		for_epoch: McEpochNumber,
 		scripts: MainChainScripts,
-	) -> Result<Self, InherentProviderCreationError> {
+	) -> Result<Self, InherentProviderCreationError>
+	where
+		E: std::error::Error + Send + Sync + 'static,
+	{
 		Ok(Self {
 			data: Some(
 				AuthoritySelectionInputs::from_mc_data(candidate_data_source, for_epoch, scripts)
@@ -40,13 +42,13 @@ impl AriadneInherentDataProvider {
 		})
 	}
 
-	pub async fn new<Block, SessionKeys, CrossChainPublic, T>(
+	pub async fn new<Block, SessionKeys, CrossChainPublic, T, E>(
 		client: &T,
 		sc_slot_config: &ScSlotConfig,
 		epoch_config: &EpochConfig,
 		parent_hash: <Block as BlockT>::Hash,
 		slot: Slot,
-		candidate_data_source: &(dyn CandidateDataSource + Send + Sync),
+		candidate_data_source: &(dyn AuthoritySelectionDataSource<Error = E> + Send + Sync),
 		mc_reference_epoch: McEpochNumber,
 	) -> Result<Self, InherentProviderCreationError>
 	where
@@ -61,6 +63,7 @@ impl AriadneInherentDataProvider {
 			AuthoritySelectionInputs,
 			ScEpochNumber,
 		>,
+		E: std::error::Error + Send + Sync + 'static,
 	{
 		let for_mc_epoch = mc_epoch_for_next_ariadne_cidp(
 			client,
@@ -70,7 +73,10 @@ impl AriadneInherentDataProvider {
 			slot,
 		)?;
 
-		let data_epoch = candidate_data_source.data_epoch(for_mc_epoch).await?;
+		let data_epoch = candidate_data_source
+			.data_epoch(for_mc_epoch)
+			.await
+			.map_err(|err| InherentProviderCreationError::DataSourceError(Box::new(err)))?;
 		// We could accept mc_reference at last slot of data_epoch, but calculations are much easier like that.
 		// Additionally, in current implementation, the inequality below is always true, thus there is no need to make it more accurate.
 		let scripts = client.runtime_api().get_main_chain_scripts(parent_hash)?;
@@ -99,7 +105,7 @@ pub enum InherentProviderCreationError {
 	#[error("Failed to create authority selection inputs: {0}")]
 	InputsCreationError(#[from] AuthoritySelectionInputsCreationError),
 	#[error("Data source call failed: {0}")]
-	DataSourceError(#[from] DataSourceError),
+	DataSourceError(Box<dyn std::error::Error + Send + Sync>),
 }
 
 #[cfg(feature = "std")]
@@ -195,12 +201,20 @@ pub struct CommitteeConfig {
 mod tests {
 	use super::*;
 	use crate::ariadne_inherent_data_provider::AriadneInherentDataProvider;
+	use crate::mock::MockAuthoritySelectionDataSource;
 	use crate::runtime_api_mock::*;
 	use epoch_derivation::*;
-	use main_chain_follower_api::mock_services::MockCandidateDataSource;
 	use sidechain_slots::*;
 	use sp_core::H256;
 	use SlotDuration;
+
+	#[derive(thiserror::Error, sp_runtime::RuntimeDebug, Default)]
+	pub enum TestErr {
+		#[allow(unused)]
+		#[error("Test error")]
+		#[default]
+		Err,
+	}
 
 	#[tokio::test]
 	async fn return_empty_ariadne_cidp_if_runtime_requests_too_new_epoch() {
@@ -231,7 +245,7 @@ mod tests {
 			H256::zero(),
 			// This is the slot that will be used to calculate current_epoch_number
 			Slot::from(400u64),
-			&MockCandidateDataSource::default(),
+			&MockAuthoritySelectionDataSource::<TestErr>::default(),
 			mc_reference_epoch,
 		)
 		.await;
