@@ -1,7 +1,6 @@
 //! Core API for the main chain queries
 
 use plutus::Datum;
-use sidechain_domain::*;
 #[allow(unused_imports)]
 use std::sync::Arc;
 use thiserror::Error;
@@ -18,9 +17,6 @@ pub use block::BlockDataSource;
 pub mod candidate;
 #[cfg(feature = "candidate-source")]
 pub use candidate::CandidateDataSource;
-
-#[cfg(feature = "std")]
-pub mod mock_services;
 
 #[derive(Debug, PartialEq, Error)]
 pub enum DataSourceError {

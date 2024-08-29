@@ -1,11 +1,10 @@
 use crate::inherent_data::{ProposalCIDP, VerifierCIDP};
 use crate::main_chain_follower::DataSources;
+use crate::tests::mock::test_data_sources;
 use crate::tests::mock::{test_client, test_create_inherent_data_config};
 use crate::tests::runtime_api_mock::{mock_header, TestApi};
 use authority_selection_inherents::authority_selection_inputs::AuthoritySelectionInputs;
 use authority_selection_inherents::mock::MockAuthoritySelectionDataSource;
-use main_chain_follower_api::mock_services::MockBlockDataSource;
-use main_chain_follower_api::mock_services::TestDataSources;
 use main_chain_follower_api::DataSourceError;
 use sidechain_domain::{
 	McBlockHash, McBlockNumber, McEpochNumber, McSlotNumber, NativeTokenAmount, ScEpochNumber,
@@ -41,8 +40,9 @@ async fn block_proposal_cidp_should_be_created_correctly() {
 		_marker: Default::default(),
 	};
 
-	let block_data_source = MockMcHashDataSource::<DataSourceError>::new(vec![latest_stable_block]);
-	let mut data_sources: DataSources = TestDataSources::new().into();
+	let block_data_source =
+		MockMcHashDataSource::<DataSourceError>::new(vec![latest_stable_block.clone()]);
+	let mut data_sources: DataSources = test_data_sources();
 	data_sources.mc_hash = Arc::new(block_data_source);
 	data_sources.selection = Arc::new(selection_data_source);
 
@@ -81,11 +81,9 @@ async fn block_proposal_cidp_should_be_created_correctly() {
 	assert_eq!(
 		inherent_data
 			.get_data::<McBlockHash>(&sidechain_mc_hash::INHERENT_IDENTIFIER)
+			.unwrap()
 			.unwrap(),
-		MockBlockDataSource::default()
-			.get_all_stable_blocks()
-			.first()
-			.map(|b| b.hash.clone())
+		latest_stable_block.hash
 	);
 	assert!(inherent_data
 		.get_data::<AuthoritySelectionInputs>(&sp_session_validator_management::INHERENT_IDENTIFIER)
@@ -123,7 +121,7 @@ async fn block_verification_cidp_should_be_created_correctly() {
 		permissioned_candidates: vec![Some(vec![]), Some(vec![])],
 		_marker: Default::default(),
 	};
-	let mut data_sources: DataSources = TestDataSources::new().into();
+	let mut data_sources: DataSources = test_data_sources();
 	data_sources.mc_hash = Arc::new(block_data_source);
 	data_sources.selection = Arc::new(selection_data_source);
 
