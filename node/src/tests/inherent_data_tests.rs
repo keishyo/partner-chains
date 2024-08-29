@@ -3,6 +3,7 @@ use crate::main_chain_follower::DataSources;
 use crate::tests::mock::{test_client, test_create_inherent_data_config};
 use crate::tests::runtime_api_mock::{mock_header, TestApi};
 use authority_selection_inherents::authority_selection_inputs::AuthoritySelectionInputs;
+use authority_selection_inherents::mock::MockAuthoritySelectionDataSource;
 use main_chain_follower_api::mock_services::MockBlockDataSource;
 use main_chain_follower_api::mock_services::TestDataSources;
 use main_chain_follower_api::DataSourceError;
@@ -26,12 +27,31 @@ async fn block_proposal_cidp_should_be_created_correctly() {
 		"0x0000000000000000000000000000000000000000000000000000000000000001",
 	);
 
+	let latest_stable_block = MainchainBlock {
+		number: McBlockNumber(1),
+		hash: McBlockHash([1; 32]),
+		epoch: McEpochNumber(2),
+		slot: McSlotNumber(3),
+		timestamp: 4,
+	};
+
+	let selection_data_source = MockAuthoritySelectionDataSource {
+		candidates: vec![vec![], vec![]],
+		permissioned_candidates: vec![Some(vec![]), Some(vec![])],
+		_marker: Default::default(),
+	};
+
+	let block_data_source = MockMcHashDataSource::<DataSourceError>::new(vec![latest_stable_block]);
+	let mut data_sources: DataSources = TestDataSources::new().into();
+	data_sources.mc_hash = Arc::new(block_data_source);
+	data_sources.selection = Arc::new(selection_data_source);
+
 	let inherent_data_providers = ProposalCIDP::new(
 		test_create_inherent_data_config(),
 		TestApi::new(ScEpochNumber(2))
 			.with_headers([(H256::zero(), mock_header())])
 			.into(),
-		TestDataSources::new().into(),
+		data_sources,
 	)
 	.create_inherent_data_providers(H256::zero(), ())
 	.await
@@ -98,8 +118,14 @@ async fn block_verification_cidp_should_be_created_correctly() {
 		parent_stable_block,
 		latest_stable_block,
 	]);
+	let selection_data_source = MockAuthoritySelectionDataSource {
+		candidates: vec![vec![], vec![]],
+		permissioned_candidates: vec![Some(vec![]), Some(vec![])],
+		_marker: Default::default(),
+	};
 	let mut data_sources: DataSources = TestDataSources::new().into();
 	data_sources.mc_hash = Arc::new(block_data_source);
+	data_sources.selection = Arc::new(selection_data_source);
 
 	let create_inherent_data_config = test_create_inherent_data_config();
 
