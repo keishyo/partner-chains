@@ -33,6 +33,7 @@ serde_json = { workspace = true }
 pretty_assertions = { workspace = true }
 time-source = { workspace = true, features = ['mock'] }
 sp-consensus-slots = { workspace = true, features = ["std"] }
+sp-sidechain = { workspace = true, features = ["std", "mock"] }
 
 [features]
 default = []

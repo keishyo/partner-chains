@@ -172,8 +172,6 @@ mod candidates {
 
 #[derive(Clone)]
 pub struct TestDataSources {
-	#[cfg(feature = "block-source")]
-	pub block: Arc<dyn BlockDataSource + Send + Sync>,
 	#[cfg(feature = "candidate-source")]
 	pub candidate: Arc<dyn CandidateDataSource + Send + Sync>,
 }
@@ -187,17 +185,9 @@ impl Default for TestDataSources {
 impl TestDataSources {
 	pub fn new() -> TestDataSources {
 		TestDataSources {
-			#[cfg(feature = "block-source")]
-			block: Arc::from(MockBlockDataSource::default()),
 			#[cfg(feature = "candidate-source")]
 			candidate: Arc::from(MockCandidateDataSource::default()),
 		}
-	}
-
-	#[cfg(feature = "block-source")]
-	pub fn with_block_data_source(mut self, s: MockBlockDataSource) -> TestDataSources {
-		self.block = Arc::from(s);
-		self
 	}
 
 	#[cfg(feature = "candidate-source")]

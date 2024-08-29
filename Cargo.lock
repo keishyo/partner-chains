@@ -1819,6 +1819,7 @@ dependencies = [
  "sidechain-domain",
  "sidechain-mc-hash",
  "sp-native-token-management",
+ "sp-sidechain",
  "sp-timestamp",
  "sqlx",
  "substrate-prometheus-endpoint",
@@ -10004,6 +10005,8 @@ dependencies = [
 name = "sp-sidechain"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
+ "derive-new",
  "frame-support",
  "parity-scale-codec",
  "scale-info",

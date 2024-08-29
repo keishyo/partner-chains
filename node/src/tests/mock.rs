@@ -16,12 +16,12 @@ use sidechain_slots::{ScSlotConfig, SlotsPerEpoch};
 use sp_core::offchain::{Duration, Timestamp};
 use sp_core::{ecdsa, ed25519, Pair};
 use sp_native_token_management::mock::MockNativeTokenDataSource;
+use sp_sidechain::mock::MockSidechainDataSource;
 use std::sync::Arc;
 
 impl From<TestDataSources> for DataSources {
 	fn from(value: TestDataSources) -> Self {
 		Self {
-			block: value.block,
 			candidate: value.candidate,
 			mc_hash: Arc::new(MockMcHashDataSource::new(vec![])),
 			selection: Arc::new(MockAuthoritySelectionDataSource {
@@ -30,6 +30,7 @@ impl From<TestDataSources> for DataSources {
 				_marker: Default::default(),
 			}),
 			native_token: Arc::new(MockNativeTokenDataSource::new([].into())),
+			sidechain: Arc::new(MockSidechainDataSource::new(Default::default())),
 		}
 	}
 }

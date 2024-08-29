@@ -1,17 +1,23 @@
 use crate::inherent_data::{ProposalCIDP, VerifierCIDP};
+use crate::main_chain_follower::DataSources;
 use crate::tests::mock::{test_client, test_create_inherent_data_config};
 use crate::tests::runtime_api_mock::{mock_header, TestApi};
 use authority_selection_inherents::authority_selection_inputs::AuthoritySelectionInputs;
-use main_chain_follower_api::{block::MainchainBlock, mock_services::*};
+use main_chain_follower_api::mock_services::MockBlockDataSource;
+use main_chain_follower_api::mock_services::TestDataSources;
+use main_chain_follower_api::DataSourceError;
 use sidechain_domain::{
 	McBlockHash, McBlockNumber, McEpochNumber, McSlotNumber, NativeTokenAmount, ScEpochNumber,
 };
+use sidechain_mc_hash::mock::MockMcHashDataSource;
+use sidechain_mc_hash::MainchainBlock;
 use sp_consensus_aura::Slot;
 use sp_core::H256;
 use sp_inherents::CreateInherentDataProviders;
 use sp_inherents::{InherentData, InherentDataProvider};
 use sp_timestamp::Timestamp;
 use std::env;
+use std::sync::Arc;
 
 #[tokio::test]
 async fn block_proposal_cidp_should_be_created_correctly() {
@@ -73,17 +79,27 @@ async fn block_proposal_cidp_should_be_created_correctly() {
 
 #[tokio::test]
 async fn block_verification_cidp_should_be_created_correctly() {
-	let mut block_data_source = MockBlockDataSource::default();
-	let parent_stable_block = block_data_source.get_all_stable_blocks().first().unwrap().clone();
 	let mc_block_hash = McBlockHash([2; 32]);
-	block_data_source.push_stable_block(MainchainBlock {
+	let parent_stable_block = MainchainBlock {
+		number: McBlockNumber(1),
+		hash: McBlockHash([1; 32]),
+		epoch: McEpochNumber(2),
+		slot: McSlotNumber(3),
+		timestamp: 4,
+	};
+	let latest_stable_block = MainchainBlock {
 		number: McBlockNumber(parent_stable_block.number.0 + 5),
 		hash: mc_block_hash.clone(),
 		slot: McSlotNumber(parent_stable_block.slot.0 + 100),
 		timestamp: parent_stable_block.timestamp + 101,
 		epoch: McEpochNumber(parent_stable_block.epoch.0),
-	});
-	let data_sources = TestDataSources::new().with_block_data_source(block_data_source).into();
+	};
+	let block_data_source = MockMcHashDataSource::<DataSourceError>::new(vec![
+		parent_stable_block,
+		latest_stable_block,
+	]);
+	let mut data_sources: DataSources = TestDataSources::new().into();
+	data_sources.mc_hash = Arc::new(block_data_source);
 
 	let create_inherent_data_config = test_create_inherent_data_config();
 

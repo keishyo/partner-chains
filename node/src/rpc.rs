@@ -111,7 +111,7 @@ where
 		SidechainRpc::new(
 			client.clone(),
 			EpochConfig::read().unwrap(),
-			main_chain_follower_data_sources.block.clone(),
+			main_chain_follower_data_sources.sidechain.clone(),
 			time_source.clone(),
 		)
 		.into_rpc(),

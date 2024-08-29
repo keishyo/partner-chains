@@ -16,6 +16,7 @@ use main_chain_follower_api::{
 };
 use serde::Deserialize;
 use sidechain_domain::McBlockHash;
+use sp_sidechain::{LatestBlockInfo, SidechainDataSource};
 use sqlx::PgPool;
 use std::error::Error;
 use std::sync::{Arc, Mutex};
@@ -50,7 +51,7 @@ impl BlockDataSource for BlockDataSourceImpl {
 
 	async fn get_latest_stable_block_for(&self, reference_timestamp: Timestamp) -> Result<Option<MainchainBlock>> {
 		let reference_timestamp = BlockDataSourceImpl::timestamp_to_db_type(reference_timestamp)?;
-		let latest = self.get_latest_block_info().await?;
+		let latest = BlockDataSource::get_latest_block_info(self).await?;
 		let offset = self.security_parameter + self.block_stability_margin;
 		let stable = BlockNumber(latest.number.0.saturating_sub(offset));
 		let block = self.get_latest_block(stable, reference_timestamp).await?;
@@ -103,6 +104,17 @@ impl sidechain_mc_hash::McHashDataSource for BlockDataSourceImpl {
 			slot: block.slot,
 			timestamp: block.timestamp,
 		}))
+	}
+}
+
+#[async_trait]
+impl SidechainDataSource for BlockDataSourceImpl {
+	type Error = DataSourceError;
+
+	async fn get_latest_block_info(&self) -> std::result::Result<LatestBlockInfo, Self::Error> {
+		<Self as BlockDataSource>::get_latest_block_info(self)
+			.await
+			.map(|block| LatestBlockInfo { epoch: block.epoch, slot: block.slot })
 	}
 }
 

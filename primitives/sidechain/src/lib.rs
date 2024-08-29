@@ -3,7 +3,7 @@
 use frame_support::pallet_prelude::Weight;
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
-use sidechain_domain::{ScEpochNumber, ScSlotNumber};
+use sidechain_domain::{McEpochNumber, McSlotNumber, ScEpochNumber, ScSlotNumber};
 #[cfg(feature = "std")]
 use sp_runtime::traits::Block as BlockT;
 
@@ -70,4 +70,43 @@ impl<
 		T: GetSidechainParams<Block, P> + GetSidechainStatus<Block>,
 	> SidechainApi<Block, P> for T
 {
+}
+
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct LatestBlockInfo {
+	pub epoch: McEpochNumber,
+	pub slot: McSlotNumber,
+}
+
+#[cfg(feature = "std")]
+#[async_trait::async_trait]
+pub trait SidechainDataSource {
+	type Error;
+
+	async fn get_latest_block_info(&self) -> Result<LatestBlockInfo, Self::Error>;
+}
+
+#[cfg(feature = "std")]
+#[cfg(any(test, feature = "mock"))]
+pub mod mock {
+	use super::*;
+	use derive_new::new;
+
+	#[derive(Clone, Default, new)]
+	pub struct MockSidechainDataSource<E> {
+		mainchain_block: LatestBlockInfo,
+		_marker: std::marker::PhantomData<E>,
+	}
+
+	#[async_trait::async_trait]
+	impl<E> SidechainDataSource for MockSidechainDataSource<E>
+	where
+		E: Send + Sync + 'static,
+	{
+		type Error = E;
+
+		async fn get_latest_block_info(&self) -> Result<LatestBlockInfo, Self::Error> {
+			Ok(self.mainchain_block.clone())
+		}
+	}
 }

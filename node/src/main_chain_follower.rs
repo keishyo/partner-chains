@@ -5,7 +5,7 @@ use db_sync_follower::{
 	candidates::{cached::CandidateDataSourceCached, CandidatesDataSourceImpl},
 	metrics::McFollowerMetrics,
 };
-use main_chain_follower_api::{BlockDataSource, CandidateDataSource, DataSourceError};
+use main_chain_follower_api::{CandidateDataSource, DataSourceError};
 use main_chain_follower_mock::{
 	block::BlockDataSourceMock, candidate::MockCandidateDataSource,
 	native_token::NativeTokenDataSourceMock,
@@ -13,14 +13,15 @@ use main_chain_follower_mock::{
 use sc_service::error::Error as ServiceError;
 use sidechain_mc_hash::McHashDataSource;
 use sp_native_token_management::NativeTokenManagementDataSource;
+use sp_sidechain::SidechainDataSource;
 use std::error::Error;
 use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct DataSources {
-	pub block: Arc<dyn BlockDataSource + Send + Sync>,
 	pub mc_hash: Arc<dyn McHashDataSource<Error = DataSourceError> + Send + Sync>,
 	pub selection: Arc<dyn AuthoritySelectionDataSource<Error = DataSourceError> + Send + Sync>,
+	pub sidechain: Arc<dyn SidechainDataSource<Error = DataSourceError> + Send + Sync>,
 	pub candidate: Arc<dyn CandidateDataSource + Send + Sync>,
 	pub native_token:
 		Arc<dyn NativeTokenManagementDataSource<Error = DataSourceError> + Send + Sync>,
@@ -55,9 +56,9 @@ fn use_mock_follower() -> bool {
 pub fn create_mock_data_sources(
 ) -> std::result::Result<DataSources, Box<dyn Error + Send + Sync + 'static>> {
 	Ok(DataSources {
-		block: Arc::new(BlockDataSourceMock),
 		mc_hash: Arc::new(BlockDataSourceMock),
 		selection: todo!(),
+		sidechain: todo!(),
 		// selection: Arc::new(MockAuthoritySelectionDataSource),
 		candidate: Arc::new(MockCandidateDataSource::from_env()?),
 		native_token: Arc::new(NativeTokenDataSourceMock::new()),
@@ -72,7 +73,7 @@ pub async fn create_cached_data_sources(
 	let pool = db_sync_follower::data_sources::get_connection_from_env().await?;
 	let mc_epoch_config = &db_sync_follower::data_sources::read_mc_epoch_config()?;
 	Ok(DataSources {
-		block: Arc::new(BlockDataSourceImpl::from_config(
+		sidechain: Arc::new(BlockDataSourceImpl::from_config(
 			pool.clone(),
 			DbSyncBlockDataSourceConfig::from_env()?,
 			mc_epoch_config,

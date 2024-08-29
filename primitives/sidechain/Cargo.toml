@@ -14,6 +14,8 @@ sp-api = { workspace = true }
 sp-runtime = { workspace = true }
 sp-blockchain = { workspace = true, optional = true }
 serde_json = { workspace = true, optional = true }
+async-trait = { workspace = true, optional = true }
+derive-new = { workspace = true }
 
 [features]
 default = ["std"]
@@ -26,5 +28,7 @@ std = [
     "sp-api/std",
     "sp-runtime/std",
 	"serde_json",
-	"sp-blockchain"
+	"sp-blockchain",
+    "async-trait"
 ]
+mock = []

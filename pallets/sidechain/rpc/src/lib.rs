@@ -7,13 +7,12 @@ use jsonrpsee::{
 	proc_macros::rpc,
 	types::{error::ErrorCode, ErrorObject, ErrorObjectOwned},
 };
-use main_chain_follower_api::BlockDataSource;
 use sidechain_domain::McEpochNumber;
 use sidechain_slots::SlotApi;
 use sp_api::ProvideRuntimeApi;
 use sp_core::offchain::Timestamp;
 use sp_runtime::traits::Block as BlockT;
-use sp_sidechain::{GetSidechainParams, GetSidechainStatus};
+use sp_sidechain::{GetSidechainParams, GetSidechainStatus, SidechainDataSource};
 use std::sync::Arc;
 use time_source::*;
 use types::*;
@@ -32,22 +31,23 @@ pub trait SidechainRpcApi<SidechainParams> {
 }
 
 #[derive(new)]
-pub struct SidechainRpc<C, Block> {
+pub struct SidechainRpc<C, Block, E> {
 	client: Arc<C>,
 	epoch_config: EpochConfig,
-	block_data_source: Arc<dyn BlockDataSource + Send + Sync>,
+	block_data_source: Arc<dyn SidechainDataSource<Error = E> + Send + Sync>,
 	time_source: Arc<dyn TimeSource + Send + Sync>,
 	_marker: std::marker::PhantomData<Block>,
 }
 
-impl<C, B> SidechainRpc<C, B> {
+impl<C, B, E> SidechainRpc<C, B, E> {
 	fn get_current_timestamp(&self) -> Timestamp {
 		Timestamp::from_unix_millis(self.time_source.get_current_time_millis())
 	}
 }
 
 #[async_trait]
-impl<C, Block, SidechainParams> SidechainRpcApiServer<SidechainParams> for SidechainRpc<C, Block>
+impl<C, Block, SidechainParams, E> SidechainRpcApiServer<SidechainParams>
+	for SidechainRpc<C, Block, E>
 where
 	Block: BlockT,
 	SidechainParams: parity_scale_codec::Decode,
@@ -55,6 +55,7 @@ where
 	C: ProvideRuntimeApi<Block>,
 	C: GetBestHash<Block>,
 	C::Api: SlotApi<Block> + GetSidechainParams<Block, SidechainParams> + GetSidechainStatus<Block>,
+	E: std::error::Error + Send + Sync + 'static,
 {
 	fn get_params(&self) -> RpcResult<SidechainParams> {
 		let api = self.client.runtime_api();
