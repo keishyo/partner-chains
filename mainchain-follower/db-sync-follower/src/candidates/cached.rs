@@ -12,6 +12,7 @@ use lru::LruCache;
 use main_chain_follower_api::{candidate::*, DataSourceError, Result};
 use serde::Deserialize;
 use sidechain_domain::*;
+use sp_session_validator_management_query::SessionValidatorManagementQueryDataSource;
 use std::{
 	error::Error,
 	sync::{Arc, Mutex},
@@ -73,6 +74,8 @@ impl CandidateDataSource for CandidateDataSourceCached {
 		self.inner.data_epoch(for_epoch).await
 	}
 }
+
+impl SessionValidatorManagementQueryDataSource for CandidateDataSourceCached {}
 
 #[async_trait]
 impl AuthoritySelectionDataSource for CandidateDataSourceCached {

@@ -3,11 +3,11 @@ pub mod get_registrations;
 pub mod types;
 
 use async_trait::async_trait;
-use authority_selection_inherents::authority_selection_inputs::AuthoritySelectionInputs;
+use authority_selection_inherents::authority_selection_inputs::{
+	AuthoritySelectionDataSource, AuthoritySelectionInputs,
+};
 use authority_selection_inherents::filter_invalid_candidates::CandidateValidationApi;
 use derive_new::new;
-use main_chain_follower_api::candidate::RawPermissionedCandidateData;
-use main_chain_follower_api::CandidateDataSource;
 use plutus::ToDatum;
 use sidechain_block_search::{predicates::AnyBlockInEpoch, FindSidechainBlock, SidechainInfo};
 use sidechain_domain::{MainchainPublicKey, McEpochNumber, ScEpochNumber};
@@ -45,6 +45,8 @@ pub trait SessionValidatorManagementQueryApi {
 	) -> QueryResult<AriadneParameters>;
 }
 
+pub trait SessionValidatorManagementQueryDataSource: AuthoritySelectionDataSource {}
+
 #[derive(new)]
 pub struct SessionValidatorManagementQuery<
 	C,
@@ -52,9 +54,11 @@ pub struct SessionValidatorManagementQuery<
 	SessionKeys: parity_scale_codec::Decode,
 	CrossChainPublic,
 	SidechainParams: parity_scale_codec::Decode + ToDatum + Clone + Send + Sync + 'static,
+	E: std::error::Error + Send + Sync + 'static,
 > {
 	client: Arc<C>,
-	candidate_data_source: Arc<dyn CandidateDataSource + Send + Sync>,
+	candidate_data_source:
+		Arc<dyn SessionValidatorManagementQueryDataSource<Error = E> + Send + Sync>,
 	_marker: std::marker::PhantomData<(Block, SessionKeys, CrossChainPublic, SidechainParams)>,
 }
 
@@ -70,8 +74,9 @@ impl<
 			+ Send
 			+ Sync
 			+ 'static,
+		E: std::error::Error + Send + Sync + 'static,
 	> SessionValidatorManagementQueryApi
-	for SessionValidatorManagementQuery<C, Block, SessionKeys, CrossChainPublic, SidechainParams>
+	for SessionValidatorManagementQuery<C, Block, SessionKeys, CrossChainPublic, SidechainParams, E>
 where
 	Block: BlockT,
 	NumberFor<Block>: From<u32> + Into<u32>,
@@ -176,16 +181,6 @@ where
 		let candidate_registrations = self
 			.candidates_registrations_for_epoch(epoch_number, scripts.committee_candidate_address)
 			.await?;
-		let validate_permissioned_candidate = |candidate: &RawPermissionedCandidateData| {
-			api.validate_permissioned_candidate_data(
-				best_block,
-				sidechain_domain::PermissionedCandidateData {
-					sidechain_public_key: candidate.sidechain_public_key.clone(),
-					aura_public_key: candidate.aura_public_key.clone(),
-					grandpa_public_key: candidate.grandpa_public_key.clone(),
-				},
-			)
-		};
 
 		Ok(AriadneParameters {
 			d_parameter: ariadne_parameters_response.d_parameter.into(),
@@ -193,8 +188,9 @@ where
 				.permissioned_candidates
 				.into_iter()
 				.map(|candidate| {
-					let validation_result =
-						validate_permissioned_candidate(&candidate).map_err(err_debug)?;
+					let validation_result = api
+						.validate_permissioned_candidate_data(best_block, candidate.clone())
+						.map_err(err_debug)?;
 					Ok::<PermissionedCandidateData, String>(PermissionedCandidateData::new(
 						candidate,
 						validation_result,
@@ -208,4 +204,16 @@ where
 
 pub fn err_debug<T: std::fmt::Debug>(err: T) -> String {
 	format!("{err:?}")
+}
+
+#[cfg(any(test, feature = "mock"))]
+pub mod mock {
+	use super::*;
+	use authority_selection_inherents::mock::MockAuthoritySelectionDataSource;
+
+	#[async_trait::async_trait]
+	impl<Err> SessionValidatorManagementQueryDataSource for MockAuthoritySelectionDataSource<Err> where
+		Err: std::error::Error + Send + Sync + 'static
+	{
+	}
 }

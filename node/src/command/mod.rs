@@ -68,7 +68,7 @@ pub fn run() -> sc_cli::Result<()> {
 		Some(Subcommand::PartnerChains(cmd)) => {
 			let make_dependencies = |config| async move {
 				let components = service::new_partial(&config).await?;
-				Ok((components.client, components.task_manager, components.other.3.candidate))
+				Ok((components.client, components.task_manager, components.other.3.svm_query))
 			};
 			partner_chains_node_commands::run(&cli, make_dependencies, cmd.clone())
 		},

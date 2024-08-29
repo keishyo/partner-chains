@@ -22,9 +22,14 @@ use std::sync::Arc;
 impl From<TestDataSources> for DataSources {
 	fn from(value: TestDataSources) -> Self {
 		Self {
-			candidate: value.candidate,
+			candidate: value.candidate.clone(),
 			mc_hash: Arc::new(MockMcHashDataSource::new(vec![])),
 			selection: Arc::new(MockAuthoritySelectionDataSource {
+				candidates: vec![],
+				permissioned_candidates: vec![],
+				_marker: Default::default(),
+			}),
+			svm_query: Arc::new(MockAuthoritySelectionDataSource {
 				candidates: vec![],
 				permissioned_candidates: vec![],
 				_marker: Default::default(),

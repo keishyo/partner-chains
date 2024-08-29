@@ -4,7 +4,6 @@ use clap::{Args, Parser};
 use cli_commands::registration_signatures::RegistrationSignaturesCmd;
 use frame_support::sp_runtime::traits::NumberFor;
 use frame_support::Serialize;
-use main_chain_follower_api::CandidateDataSource;
 use parity_scale_codec::{Decode, Encode};
 use plutus::ToDatum;
 use sc_cli::{CliConfiguration, SharedParams, SubstrateCli};
@@ -16,6 +15,7 @@ use sp_runtime::traits::Block as BlockT;
 use sp_session_validator_management::SessionValidatorManagementApi;
 use sp_session_validator_management_query::commands::*;
 use sp_session_validator_management_query::SessionValidatorManagementQuery;
+use sp_session_validator_management_query::SessionValidatorManagementQueryDataSource;
 use sp_sidechain::{GetSidechainParams, GetSidechainStatus};
 use std::future::Future;
 use std::sync::Arc;
@@ -86,7 +86,16 @@ pub enum PartnerChainsSubcommand<SidechainParams: clap::Args> {
 	RegistrationSignatures(RegistrationSignaturesCmd<SidechainParams>),
 }
 
-pub fn run<Cli, Dependencies, SmartContractsParams, Block, CrossChainPublic, SessionKeys, Client>(
+pub fn run<
+	Cli,
+	Dependencies,
+	SmartContractsParams,
+	Block,
+	CrossChainPublic,
+	SessionKeys,
+	Client,
+	E,
+>(
 	cli: &Cli,
 	get_deps: impl FnOnce(sc_service::Configuration) -> Dependencies,
 	cmd: PartnerChainsSubcommand<SmartContractsParams>,
@@ -95,7 +104,11 @@ where
 	Cli: SubstrateCli,
 	Dependencies: Future<
 		Output = Result<
-			(Arc<Client>, TaskManager, Arc<dyn CandidateDataSource + Send + Sync>),
+			(
+				Arc<Client>,
+				TaskManager,
+				Arc<dyn SessionValidatorManagementQueryDataSource<Error = E> + Send + Sync>,
+			),
 			sc_service::error::Error,
 		>,
 	>,
@@ -114,6 +127,7 @@ where
 	NumberFor<Block>: From<u32> + Into<u32>,
 	SessionKeys: Decode + Send + Sync + 'static,
 	CrossChainPublic: Decode + Encode + AsRef<[u8]> + Send + Sync + 'static,
+	E: std::error::Error + Send + Sync + 'static,
 {
 	match cmd {
 		PartnerChainsSubcommand::SidechainParams(cmd) => {

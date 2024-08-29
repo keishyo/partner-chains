@@ -16,7 +16,8 @@ impl<
 		SessionKeys: parity_scale_codec::Decode + Send + Sync + 'static,
 		CrossChainPublic,
 		SidechainParams: parity_scale_codec::Decode + Send + Sync + ToDatum + Clone,
-	> SessionValidatorManagementQuery<C, Block, SessionKeys, CrossChainPublic, SidechainParams>
+		E: std::error::Error + Send + Sync + 'static,
+	> SessionValidatorManagementQuery<C, Block, SessionKeys, CrossChainPublic, SidechainParams, E>
 where
 	Block: BlockT,
 	C: HeaderBackend<Block>,
@@ -112,13 +113,15 @@ fn get_registrations_response_map(
 	Ok(map)
 }
 
-pub(crate) async fn get_candidates_for_epoch(
+pub(crate) async fn get_candidates_for_epoch<E: std::error::Error + Send + Sync + 'static>(
 	mainchain_epoch: McEpochNumber,
-	candidate_data_source: &(dyn CandidateDataSource + Send + Sync),
+	candidate_data_source: &(dyn SessionValidatorManagementQueryDataSource<Error = E>
+	      + Send
+	      + Sync),
 	committee_candidate_address: MainchainAddress,
 ) -> Result<Vec<CandidateRegistrations>, String> {
 	candidate_data_source
 		.get_candidates(mainchain_epoch, committee_candidate_address)
 		.await
-		.map_err(|err| format!("{err:?}"))
+		.map_err(|err| err.to_string())
 }

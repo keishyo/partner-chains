@@ -107,6 +107,7 @@ assert_cmd = { workspace = true }
 sp-native-token-management = { workspace = true, features = ["mock"] }
 authority-selection-inherents = { workspace = true, features = ["mock"] }
 sp-sidechain = { workspace = true, features = ["mock"] }
+sp-session-validator-management-query = { workspace = true, features = ["mock"] }
 
 [features]
 default = [

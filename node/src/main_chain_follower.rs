@@ -13,6 +13,7 @@ use main_chain_follower_mock::{
 use sc_service::error::Error as ServiceError;
 use sidechain_mc_hash::McHashDataSource;
 use sp_native_token_management::NativeTokenManagementDataSource;
+use sp_session_validator_management_query::SessionValidatorManagementQueryDataSource;
 use sp_sidechain::SidechainDataSource;
 use std::error::Error;
 use std::sync::Arc;
@@ -23,6 +24,8 @@ pub struct DataSources {
 	pub selection: Arc<dyn AuthoritySelectionDataSource<Error = DataSourceError> + Send + Sync>,
 	pub sidechain: Arc<dyn SidechainDataSource<Error = DataSourceError> + Send + Sync>,
 	pub candidate: Arc<dyn CandidateDataSource + Send + Sync>,
+	pub svm_query:
+		Arc<dyn SessionValidatorManagementQueryDataSource<Error = DataSourceError> + Send + Sync>,
 	pub native_token:
 		Arc<dyn NativeTokenManagementDataSource<Error = DataSourceError> + Send + Sync>,
 }
@@ -59,6 +62,7 @@ pub fn create_mock_data_sources(
 		mc_hash: Arc::new(BlockDataSourceMock),
 		selection: todo!(),
 		sidechain: todo!(),
+		svm_query: todo!(),
 		// selection: Arc::new(MockAuthoritySelectionDataSource),
 		candidate: Arc::new(MockCandidateDataSource::from_env()?),
 		native_token: Arc::new(NativeTokenDataSourceMock::new()),
@@ -85,6 +89,10 @@ pub async fn create_cached_data_sources(
 			mc_epoch_config,
 			metrics_opt.clone(),
 		)),
+		svm_query: Arc::new(CandidateDataSourceCached::new_from_env(
+			CandidatesDataSourceImpl::from_config(pool.clone(), metrics_opt.clone()).await?,
+			CANDIDATES_FOR_EPOCH_CACHE_SIZE,
+		)?),
 		candidate: Arc::new(CandidateDataSourceCached::new_from_env(
 			CandidatesDataSourceImpl::from_config(pool.clone(), metrics_opt.clone()).await?,
 			CANDIDATES_FOR_EPOCH_CACHE_SIZE,

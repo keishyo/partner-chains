@@ -35,6 +35,7 @@ sp-native-token-management = { workspace = true, features = ["std"], optional = 
 authority-selection-inherents = { workspace = true, features = ["std"], optional = true }
 sidechain-mc-hash = { workspace = true, optional = true }
 sp-sidechain = { workspace = true, optional = true, features = ["std"] }
+sp-session-validator-management-query = { workspace = true, optional = true }
 
 [dev-dependencies]
 tokio-test = "0.4.3"
@@ -43,5 +44,5 @@ ctor = "0.2.5"
 [features]
 default = []
 block-source = ["main-chain-follower-api/block-source", "sidechain-mc-hash", "sp-sidechain"]
-candidate-source = ["main-chain-follower-api/candidate-source", "authority-selection-inherents"]
+candidate-source = ["main-chain-follower-api/candidate-source", "authority-selection-inherents", "sp-session-validator-management-query"]
 native-token = ["sp-native-token-management"]
