@@ -55,7 +55,7 @@
         customBuildRustCrateForPkgs = pkgs: pkgs.buildRustCrate.override {
           cargo = self'.packages.rustToolchain;
           rustc = self'.packages.rustToolchain;
-          defaultCrateOverrides = pkgs.defaultCrateOverrides // {
+          defaultCrateOverrides = pkgs.defaultCrateOverrides // rec {
             # WIP, broken still
             openssl-sys = attrs: {
               RUST_BACKTRACE="full";
@@ -70,6 +70,7 @@
                 pkgs.openssl.dev
                 pkgs.openssl.bin
               ];
+              OPENSSL_NO_VENDOR = 1;
               OPENSSL_DIR="${pkgs.openssl.dev}";
               OPENSSL_INCLUDE_DIR="${pkgs.openssl.dev}/include";
               OPENSSL_LIB_DIR="${pkgs.openssl.out}/lib";
@@ -103,6 +104,28 @@
                 pkgs.llvm
                 pkgs.pkg-config
                 pkgs.breakpointHook
+              ];
+            };
+            litep2p = attrs: {
+              buildInputs = [
+                pkgs.protobuf
+              ];
+            };
+            sc-network = attrs: {
+              CARGO = cargo;
+              buildInputs = [
+                pkgs.protobuf
+              ];
+            };
+            sc-network-light = attrs: {
+              buildInputs = [
+                pkgs.protobuf
+              ];
+            };
+            sc-network-sync = attrs: {
+              CARGO = cargo;
+              buildInputs = [
+                pkgs.protobuf
               ];
             };
             # TODO: read the Cargo.toml and just map CARGO to all dependencies listed
@@ -177,11 +200,38 @@
             frame-benchmarking = attrs: { CARGO = cargo; };
             pallet-session = attrs: { CARGO = cargo; };
             sc-client-db = attrs: { CARGO = cargo; };
+            sc-network-common = attrs: { CARGO = cargo; };
+            sc-mixnet = attrs: { CARGO = cargo; };
+            sc-rpc-api = attrs: { CARGO = cargo; };
+            sc-consensus-grandpa = attrs: { CARGO = cargo; };
+            substrate-frame-rpc-system = attrs: { CARGO = cargo; };
+            sc-consensus-grandpa-rpc = attrs: { CARGO = cargo; };
+            sc-rpc-spec-v2 = attrs: { CARGO = cargo; };
+            sc-cli = attrs: { CARGO = cargo; };
+            mock-types = attrs: { CARGO = cargo; };
+            cli-commands = attrs: {
+              CARGO = cargo;
+              WASM_BUILD_WORKSPACE_HINT = "${self}";
+              CARGO_MANIFEST_DIR="${self}";
+              patchPhase = ''
+                echo ${builtins.toJSON attrs}
+              '';
+            };
             # not working
             sidechain-runtime = attrs: {
+              buildInputs = [
+
+              ];
               CARGO_MANIFEST_DIR="${self}";
               CARGO = cargo;
+              #WASM_BUILD_WORKSPACE_HINT = "${self}";
+              CARGO_NET_OFFLINE = "true";
+              patchPhase = ''
+                echo ${builtins.toJSON attrs}
+                echo $WASM_BUILD_WORKSPACE_HINT
+              '';
               nativeBuildInputs = [pkgs.breakpointHook];
+              #__noChroot = true;
             };
           };
         };
