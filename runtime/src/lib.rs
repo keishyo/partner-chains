@@ -39,7 +39,7 @@ use pallet_grandpa::AuthorityId as GrandpaId;
 pub use pallet_session_validator_management;
 pub use pallet_timestamp::Call as TimestampCall;
 use pallet_transaction_payment::{ConstFeeMultiplier, FungibleAdapter, Multiplier};
-use session_manager::ValidatorManagementSessionManager;
+use session_manager::PalletSessionValidatorManagementSessionManager;
 use sidechain_domain::{
 	MainchainPublicKey, NativeTokenAmount, PermissionedCandidateData, RegistrationData,
 	ScEpochNumber, ScSlotNumber, StakeDelegation,
@@ -200,7 +200,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	//   `spec_version`, and `authoring_version` are the same between Wasm and native.
 	// This value is set to 100 to notify Polkadot-JS App (https://polkadot.js.org/apps) to use
 	//   the compatible custom types.
-	spec_version: 113,
+	spec_version: 114,
 	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -352,7 +352,17 @@ impl pallet_aura::Config for Runtime {
 	type SlotDuration = ConstU64<SLOT_DURATION>;
 }
 
-pallet_session_runtime_stub::impl_pallet_session_config!(Runtime);
+impl pallet_session::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type ValidatorId = <Self as frame_system::Config>::AccountId;
+	type ValidatorIdOf = pallet_session_runtime_stub::AccountIdIsValidatorId;
+	type ShouldEndSession = PalletSessionValidatorManagementSessionManager<Runtime>;
+	type NextSessionRotation = ();
+	type SessionManager = PalletSessionValidatorManagementSessionManager<Runtime>;
+	type SessionHandler = <opaque::SessionKeys as OpaqueKeys>::KeyTypeIdProviders;
+	type Keys = opaque::SessionKeys;
+	type WeightInfo = ();
+}
 
 impl pallet_grandpa::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
@@ -412,16 +422,6 @@ impl pallet_sudo::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type RuntimeCall = RuntimeCall;
 	type WeightInfo = weights::pallet_sudo::WeightInfo<Runtime>;
-}
-
-impl pallet_partner_chains_session::Config for Runtime {
-	type RuntimeEvent = RuntimeEvent;
-	type ValidatorId = <Self as frame_system::Config>::AccountId;
-	type ShouldEndSession = ValidatorManagementSessionManager<Runtime>;
-	type NextSessionRotation = ();
-	type SessionManager = ValidatorManagementSessionManager<Runtime>;
-	type SessionHandler = <opaque::SessionKeys as OpaqueKeys>::KeyTypeIdProviders;
-	type Keys = opaque::SessionKeys;
 }
 
 parameter_types! {
@@ -501,9 +501,8 @@ construct_runtime!(
 		// Only stub implementation of pallet_session should be wired.
 		// Partner Chains session_manager ValidatorManagementSessionManager writes to this storage.
 		// It is wired in by pallet_partner_chains_session.
-		PolkadotSessionStubForGrandpa: pallet_session,
 		// The order matters!! pallet_partner_chains_session needs to come last for correct initialization order
-		Session: pallet_partner_chains_session,
+		Session: pallet_session,
 		NativeTokenManagement: pallet_native_token_management,
 	}
 );

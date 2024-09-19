@@ -84,30 +84,6 @@ pub fn testnet_initial_authorities() -> Vec<AuthorityKeys> {
 			"0x439660b36c6c03afafca027b910b4fecf99801834c62a5e6006f27d978de234f",
 			"0x0389411795514af1627765eceffcbd002719f031604fadd7d188e2dc585b4e1afb",
 		),
-		//dave public keys
-		authority_keys(
-			"0x306721211d5404bd9da88e0204360a1a9ab8b87c66c1bc2fcdd37f3c2222cc20",
-			"0x5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9",
-			"0x03bc9d0ca094bd5b8b3225d7651eac5d18c1c04bf8ae8f8b263eebca4e1410ed0c",
-		),
-		//eve public keys
-		authority_keys(
-			"0xe659a7a1628cdd93febc04a4e0646ea20e9f5f0ce097d9a05290d4a9e054df4e",
-			"0x1dfe3e22cc0d45c70779c1095f7489a8ef3cf52d62fbd8c2fa38c9f1723502b5",
-			"0x031d10105e323c4afce225208f71a6441ee327a65b9e646e772500c74d31f669aa",
-		),
-		//ferdie public keys
-		authority_keys(
-			"0x1cbd2d43530a44705ad088af313e18f80b53ef16b36177cd4b77b846f2a5f07c",
-			"0x568cb4a574c6d178feb39c27dfc8b3f789e5f5423e19c71633c748b9acf086b5",
-			"0x0291f1217d5a04cb83312ee3d88a6e6b33284e053e6ccfc3a90339a0299d12967c",
-		),
-		//greg public keys
-		authority_keys(
-			"0x2c4ed1038f6e4131c21b6b89885ed232c5b81bae09009376e9079cc8aa518a1c",
-			"0xfa41bacb202b0529288b05af1b324f85fe561091c2d29d9df1df37c3aa687c23",
-			"0x02dacce90fca29ca80404d9b4e8ff3d9dabd03def6a82e412acb2ad04dd734dbfc",
-		),
 	]
 }
 
@@ -129,6 +105,7 @@ pub fn testnet_endowed_accounts() -> Vec<AccountId> {
 			.unwrap(),
 		AccountId::from_str("0x9cedc9f7b926191f64d68ee77dd90c834f0e73c0f53855d77d3b0517041d5640")
 			.unwrap(),
+		AccountId::from_str("5CtLD1M83vbXs42XPYyvygkUg6BxxMRBAiNqg1XD5qe7iW8g").unwrap(),
 		testnet_sudo_key(),
 		// SDETs test accounts, keys are in https://github.com/input-output-hk/sidechains-tests/tree/master/secrets
 		// negative-test
@@ -180,10 +157,14 @@ pub fn testnet_genesis(
 		},
 		transaction_payment: Default::default(),
 		session: SessionConfig {
-			initial_validators: initial_authorities
+			keys: initial_authorities
 				.iter()
 				.map(|authority_keys| {
-					(authority_keys.cross_chain.clone().into(), authority_keys.session.clone())
+					(
+						authority_keys.cross_chain.clone().into(),
+						authority_keys.cross_chain.clone().into(),
+						authority_keys.session.clone(),
+					)
 				})
 				.collect(),
 		},
@@ -195,10 +176,9 @@ pub fn testnet_genesis(
 				genesis_committee_utxo: from_var::<UtxoId>("GENESIS_COMMITTEE_UTXO")?,
 				governance_authority: from_var::<MainchainAddressHash>("GOVERNANCE_AUTHORITY")?,
 			},
-			slots_per_epoch: SlotsPerEpoch(from_var_or("SLOTS_PER_EPOCH", 60)?),
+			slots_per_epoch: SlotsPerEpoch(from_var_or("SLOTS_PER_EPOCH", 10)?),
 			..Default::default()
 		},
-		polkadot_session_stub_for_grandpa: Default::default(),
 		session_committee_management: SessionCommitteeManagementConfig {
 			initial_authorities: initial_authorities
 				.into_iter()

@@ -27,7 +27,7 @@ pub fn chain_spec() -> Result<ChainSpec, EnvVarReadError> {
 		transaction_payment: Default::default(),
 		session: SessionConfig {
 			// Initial validators are meant to be updated in the chain spec file, so it is empty here.
-			initial_validators: vec![],
+			keys: vec![],
 		},
 		sidechain: SidechainConfig {
 			params: SidechainParams {
@@ -39,7 +39,6 @@ pub fn chain_spec() -> Result<ChainSpec, EnvVarReadError> {
 			},
 			..Default::default()
 		},
-		polkadot_session_stub_for_grandpa: Default::default(),
 		session_committee_management: SessionCommitteeManagementConfig {
 			// Same as SessionConfig
 			initial_authorities: vec![],
