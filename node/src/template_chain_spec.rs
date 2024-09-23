@@ -3,8 +3,9 @@ use chain_params::SidechainParams;
 use sc_service::ChainType;
 use sidechain_domain::{MainchainAddressHash, UtxoId};
 use sidechain_runtime::{
-	AuraConfig, BalancesConfig, GrandpaConfig, NativeTokenManagementConfig, RuntimeGenesisConfig,
-	SessionCommitteeManagementConfig, SessionConfig, SidechainConfig, SudoConfig, SystemConfig,
+	AuraConfig, BalancesConfig, GrandpaConfig, NativeTokenManagementConfig,
+	PolkadotSessionStubForGrandpaConfig, RuntimeGenesisConfig, SessionCommitteeManagementConfig,
+	SidechainConfig, SudoConfig, SystemConfig,
 };
 
 /// Produces template chain spec for Partner Chains.
@@ -25,7 +26,7 @@ pub fn chain_spec() -> Result<ChainSpec, EnvVarReadError> {
 			key: None,
 		},
 		transaction_payment: Default::default(),
-		session: SessionConfig {
+		polkadot_session_stub_for_grandpa: PolkadotSessionStubForGrandpaConfig {
 			// Initial validators are meant to be updated in the chain spec file, so it is empty here.
 			keys: vec![],
 		},

@@ -4,8 +4,8 @@ use sc_service::ChainType;
 use sidechain_domain::*;
 use sidechain_runtime::{
 	AccountId, AuraConfig, BalancesConfig, GrandpaConfig, NativeTokenManagementConfig,
-	RuntimeGenesisConfig, SessionCommitteeManagementConfig, SessionConfig, SidechainConfig,
-	SudoConfig, SystemConfig,
+	PolkadotSessionStubForGrandpaConfig, RuntimeGenesisConfig, SessionCommitteeManagementConfig,
+	SidechainConfig, SudoConfig, SystemConfig,
 };
 use sidechain_slots::SlotsPerEpoch;
 use sp_core::bytes::from_hex;
@@ -156,7 +156,7 @@ pub fn testnet_genesis(
 			key: root_key,
 		},
 		transaction_payment: Default::default(),
-		session: SessionConfig {
+		polkadot_session_stub_for_grandpa: PolkadotSessionStubForGrandpaConfig {
 			keys: initial_authorities
 				.iter()
 				.map(|authority_keys| {
