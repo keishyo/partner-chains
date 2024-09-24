@@ -53,6 +53,9 @@ impl MainChainScripts {
 sp_api::decl_runtime_apis! {
 	pub trait NativeTokenManagementApi {
 		fn get_main_chain_scripts() -> MainChainScripts;
+		/// Gets current initializaion status and set it to `true` afterwards. This check is used to
+		/// determine whether historical data from the beginning of main chain should be queried.
+		fn initialized() -> bool;
 	}
 }
 
@@ -99,10 +102,16 @@ mod inherent_provider {
 	pub enum IDPCreationError {
 		#[error("Failed to read native token data from data source: {0:?}")]
 		DataSourceError(#[from] DataSourceError),
-		#[error("Failed to retrieve main chain scripts from the runtime: {0:?}")]
-		GetMainChainScriptsError(ApiError),
+		#[error("Failed to call runtime API: {0:?}")]
+		ApiError(ApiError),
 		#[error("Failed to retrieve previous MC hash: {0:?}")]
 		McHashError(Box<dyn Error + Send + Sync>),
+	}
+
+	impl From<ApiError> for IDPCreationError {
+		fn from(err: ApiError) -> Self {
+			Self::ApiError(err)
+		}
 	}
 
 	impl NativeTokenManagementInherentDataProvider {
@@ -119,12 +128,13 @@ mod inherent_provider {
 			C::Api: NativeTokenManagementApi<Block>,
 		{
 			let api = client.runtime_api();
-			let scripts = api
-				.get_main_chain_scripts(parent_hash)
-				.map_err(IDPCreationError::GetMainChainScriptsError)?;
-			let parent_mc_hash: Option<McBlockHash> =
+			let scripts = api.get_main_chain_scripts(parent_hash)?;
+			let parent_mc_hash: Option<McBlockHash> = if api.initialized(parent_hash)? {
 				get_mc_hash_for_block(client.as_ref(), parent_hash)
-					.map_err(IDPCreationError::McHashError)?;
+					.map_err(IDPCreationError::McHashError)?
+			} else {
+				None
+			};
 			let token_amount = data_source
 				.get_total_native_token_transfer(
 					parent_mc_hash,

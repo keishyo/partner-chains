@@ -30,6 +30,7 @@ This changelog is based on [Keep A Changelog](https://keepachangelog.com/en/1.1.
   This change requires migration of the node, PartnerChainsProposerFactory has to be used.
   See `service.rs` in `partner-chains-node` crate for an example.
 * renamed sidechain-main-cli and relevant naming to pc-contracts-cli
+* ETCM-8366 - native token management pallet can now observe historical transfers when added after the genesis block
 
 ## Removed
 

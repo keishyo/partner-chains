@@ -60,6 +60,9 @@ pub mod pallet {
 	pub type MainChainScriptsConfiguration<T: Config> =
 		StorageValue<_, sp_native_token_management::MainChainScripts, ValueQuery>;
 
+	#[pallet::storage]
+	pub type Initialized<T: Config> = StorageValue<_, bool, ValueQuery>;
+
 	#[pallet::genesis_config]
 	#[derive(frame_support::DefaultNoBound)]
 	pub struct GenesisConfig<T: Config> {
@@ -138,6 +141,13 @@ pub mod pallet {
 			token_amount: NativeTokenAmount,
 		) -> DispatchResult {
 			ensure_none(origin)?;
+			Initialized::<T>::mutate(|initialized| {
+				if !*initialized {
+					log::info!("");
+					*initialized = true
+				}
+				true
+			});
 			T::TokenTransferHandler::handle_token_transfer(token_amount)
 		}
 
@@ -166,6 +176,9 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> {
 		pub fn get_main_chain_scripts() -> sp_native_token_management::MainChainScripts {
 			MainChainScriptsConfiguration::<T>::get()
+		}
+		pub fn initialized() -> bool {
+			Initialized::<T>::get()
 		}
 	}
 }

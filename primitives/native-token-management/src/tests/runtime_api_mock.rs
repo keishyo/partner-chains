@@ -31,6 +31,10 @@ sp_api::mock_impl_runtime_apis! {
 			MainChainScripts::default()
 		}
 
+		fn initialized() -> bool {
+			true
+		}
+
 	}
 }
 
