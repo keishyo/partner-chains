@@ -93,7 +93,7 @@ mod inherent_provider {
 	use std::sync::Arc;
 
 	pub struct NativeTokenManagementInherentDataProvider {
-		pub token_amount: NativeTokenAmount,
+		pub token_amount: Option<NativeTokenAmount>,
 	}
 
 	#[derive(thiserror::Error, sp_runtime::RuntimeDebug)]
@@ -133,7 +133,7 @@ mod inherent_provider {
 			if version_check(version) {
 				Self::new(client, data_source, mc_hash, parent_hash).await
 			} else {
-				Ok(Self { token_amount: 0.into() })
+				Ok(Self { token_amount: Some(0.into()) })
 			}
 		}
 
@@ -164,6 +164,8 @@ mod inherent_provider {
 				)
 				.await?;
 
+			let token_amount = if token_amount.0 > 0 { Some(token_amount) } else { None };
+
 			Ok(Self { token_amount })
 		}
 	}
@@ -174,10 +176,11 @@ mod inherent_provider {
 			&self,
 			inherent_data: &mut InherentData,
 		) -> Result<(), sp_inherents::Error> {
-			inherent_data.put_data(
-				INHERENT_IDENTIFIER,
-				&TokenTransferData { token_amount: self.token_amount.clone() },
-			)
+			if let Some(token_amount) = self.token_amount.clone() {
+				inherent_data.put_data(INHERENT_IDENTIFIER, &TokenTransferData { token_amount })
+			} else {
+				Ok(())
+			}
 		}
 
 		async fn try_handle_error(
