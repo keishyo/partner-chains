@@ -11,22 +11,17 @@
     ...
   }: let
     isDarwin = pkgs.lib.hasSuffix "darwin" system;
-    fenixPkgs = inputs'.fenix.packages;
-    rustToolchain = with fenixPkgs;
-      fromToolchainFile {
-        file = ../rust-toolchain.toml;
-        # Probably should be a flake input instead
-        sha256 = "+syqAd2kX8KVa8/U2gz3blIQTTsYYt3U63xBWaGOSc8=";
-      };
+    inherit (self'.packages) rustToolchain; # The rust toolchain we constructed above
     packages = with pkgs;
       [
         coreutils
         protobuf
-        rustToolchain # The rust toolchain we constructed above
+        rustToolchain
+        cntr
         nodejs
         clang
         nodePackages.npm
-		gnumake
+        gnumake
       ]
       ++ (
         if isDarwin

@@ -22,12 +22,21 @@
     dbSyncPackages = (flake-compat { src = inputs.cardano-dbsync; }).defaultNix.packages.${system};
     smartContractsPkgs = (flake-compat { src = inputs.smart-contracts; }).defaultNix.packages.${system};
     cardanoExtraPkgs = (flake-compat { src = inputs.cardano-nix; }).defaultNix.packages.${system};
+    rustToolchain = let
+      fenixPkgs = inputs'.fenix.packages;
+      rustToolchain = with fenixPkgs;
+        fromToolchainFile {
+          file = ../rust-toolchain.toml;
+          sha256 = "+syqAd2kX8KVa8/U2gz3blIQTTsYYt3U63xBWaGOSc8=";
+        };
+      in rustToolchain;
 
   in {
-    packages = rec {
+    packages = {
       inherit (smartContractsPkgs) sidechain-main-cli;
       inherit (cardanoPackages) cardano-node cardano-cli cardano-testnet;
       inherit (dbSyncPackages) "cardano-db-sync:exe:cardano-db-sync";
+      inherit rustToolchain;
       kupo = cardanoExtraPkgs."kupo-${kupoVersion}";
       ogmios = cardanoExtraPkgs."ogmios-${ogmiosVersion}";
       partnerchains-stack = pkgs.stdenv.mkDerivation {
@@ -42,14 +51,6 @@
             --run "cd \$(${pkgs.git}/bin/git rev-parse --show-toplevel) || exit 1"
         '';
       };
-      rustToolchain = let
-        fenixPkgs = inputs'.fenix.packages;
-        rustToolchain = with fenixPkgs;
-          fromToolchainFile {
-            file = ../rust-toolchain.toml;
-            sha256 = "+syqAd2kX8KVa8/U2gz3blIQTTsYYt3U63xBWaGOSc8=";
-          };
-        in rustToolchain;
       pc-node = let
         cargo = "${self'.packages.rustToolchain}/bin/cargo";
         customBuildRustCrateForPkgs = pkgs: pkgs.buildRustCrate.override {
@@ -231,6 +232,8 @@
                 echo $WASM_BUILD_WORKSPACE_HINT
               '';
               nativeBuildInputs = [pkgs.breakpointHook];
+              src = ./..;
+              buildAndTestSubdir = "runtime";
               #__noChroot = true;
             };
           };
