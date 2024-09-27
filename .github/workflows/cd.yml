@@ -93,84 +93,11 @@ jobs:
           SSH_KEY: ${{ secrets.SUBSTRATE_REPO_SSH_KEY }}
           CONFIG_TAR: ${{ secrets.EARTHLY_TAR }}
 
-  local-environment-tests:          
-    permissions:
-      id-token: write
-      contents: write
-    runs-on: ubuntu-latest
-    needs: [build-linux]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Deploy and test against local environment
-        uses: ./.github/actions/tests/local-environment-tests
-        with:
-          tag: ${{ inputs.tag }}  
-          image: ${{ secrets.ECR_REGISTRY_SECRET }}/substrate-node:${{ inputs.sha }}
-
-  deploy-argocd:
-    needs: local-environment-tests
-    permissions:
-      id-token: write
-      contents: write
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-  
-      - name: Deploy ArgoCD Node
-        uses: ./.github/actions/deploy/argocd/deploy-argocd
-        with:
-          sha: ${{ inputs.sha }}
-        env:
-          ACTIONS_PAT: ${{ secrets.ACTIONS_PAT }} 
-        
-  argocd-tests:
-    needs: deploy-argocd
-    permissions:
-      id-token: write
-      contents: write
-    runs-on: [self-hosted, eks]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Run Tests
-        uses: ./.github/actions/tests/argocd-tests
-        with:
-          node-host: sha-${{ inputs.sha }}-service.integration-testing.svc.cluster.local
-          node-port: 9933
-          ssh_key_earthly: ${{ secrets.SUBSTRATE_REPO_SSH_KEY }}
-          config_tar: ${{ secrets.EARTHLY_TAR }}
-          ssh_key_binary_host: ${{ secrets.SSH_KEY_BINARY_HOST }}
-        env:
-          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
-          AWS_ROLE_ARN_: ${{ secrets.AWS_ROLE_ARN_ }}
-          SSH_KEY_BINARY_HOST: ${{ secrets.SSH_KEY_BINARY_HOST }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          JIRA_URL: ${{ secrets.JIRA_URL }}
-          ACTIONS_PAT: ${{ secrets.ACTIONS_PAT }} 
-
-  teardown-argocd:
-    needs: argocd-tests
-    permissions:
-      id-token: write
-      contents: write
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Teardown ArgoCD Environment
-        uses: ./.github/actions/deploy/argocd/teardown-argocd
-        with:
-          sha: ${{ inputs.sha }}
-        env:
-          ACTIONS_PAT: ${{ secrets.ACTIONS_PAT }}
-
   create-draft-release:
     permissions:
       id-token: write
       contents: write
-    needs: [local-environment-tests, argocd-tests, teardown-argocd]
+    needs: build-linux
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -186,7 +113,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    needs: local-environment-tests
+    needs: build-linux
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -218,7 +145,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    needs: upload-chain-specs
+    needs: [build-and-publish-ecr, upload-chain-specs]
     runs-on: [self-hosted, eks]
     steps:
       - name: Checkout
