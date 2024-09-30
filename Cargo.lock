@@ -1816,6 +1816,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sidechain-domain",
+ "sp-native-token-management",
  "sqlx",
  "substrate-prometheus-endpoint",
  "testcontainers-modules",
@@ -4786,6 +4787,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sidechain-domain",
+ "sp-native-token-management",
 ]
 
 [[package]]
@@ -9815,8 +9817,9 @@ name = "sp-native-token-management"
 version = "1.2.0"
 dependencies = [
  "async-trait",
+ "derive-new",
+ "derive_more",
  "envy",
- "main-chain-follower-api",
  "parity-scale-codec",
  "scale-info",
  "serde",

@@ -11,11 +11,16 @@ use sidechain_domain::mainchain_epoch::MainchainEpochConfig;
 use sidechain_domain::*;
 use sidechain_slots::{ScSlotConfig, SlotsPerEpoch};
 use sp_core::offchain::{Duration, Timestamp};
+use sp_native_token_management::mock::MockNativeTokenDataSource;
 use std::sync::Arc;
 
 impl From<TestDataSources> for DataSources {
 	fn from(value: TestDataSources) -> Self {
-		Self { block: value.block, candidate: value.candidate, native_token: value.native_token }
+		Self {
+			block: value.block,
+			candidate: value.candidate,
+			native_token: Arc::new(MockNativeTokenDataSource::new([].into())),
+		}
 	}
 }
 
