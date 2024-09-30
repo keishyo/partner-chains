@@ -13,6 +13,7 @@ pub struct MainchainEpochConfig {
 	/// Number of the Cardano Epoch started at `first_epoch_timestamp_millis`
 	pub first_epoch_number: u32,
 	pub first_slot_number: u64,
+	pub slot_duration_millis: Duration,
 }
 
 #[derive(Encode, PartialEq, Eq)]
@@ -96,7 +97,7 @@ impl MainchainEpochDerivation for MainchainEpochConfig {
 			.unix_millis()
 			.checked_sub(self.first_epoch_timestamp_millis.unix_millis())
 			.ok_or(EpochDerivationError::TimestampTooSmall)?;
-		let mainchain_slot_duration = 1000;
+		let mainchain_slot_duration = self.slot_duration_millis.millis();
 		Ok(self.first_slot_number + time_elapsed / mainchain_slot_duration)
 	}
 
@@ -144,6 +145,7 @@ mod tests {
 					first_epoch_number: 100,
 					epoch_duration_millis: Duration::from_millis(1000),
 					first_slot_number: 42,
+					slot_duration_millis: Duration::from_millis(2),
 				}
 			);
 			Ok(())
@@ -155,6 +157,7 @@ mod tests {
 		jail.set_env("MC__FIRST_EPOCH_NUMBER", 100);
 		jail.set_env("MC__EPOCH_DURATION_MILLIS", 1000);
 		jail.set_env("MC__FIRST_SLOT_NUMBER", 42);
+		jail.set_env("MC__SLOT_DURATION_MILLIS", 2);
 	}
 
 	fn test_mc_epoch_config() -> MainchainEpochConfig {
@@ -163,6 +166,7 @@ mod tests {
 			epoch_duration_millis: Duration::from_millis(1),
 			first_epoch_number: 0,
 			first_slot_number: 0,
+			slot_duration_millis: Duration::from_millis(1000),
 		}
 	}
 
@@ -172,6 +176,7 @@ mod tests {
 			epoch_duration_millis: Duration::from_millis(5 * 24 * 60 * 60 * 1000),
 			first_epoch_number: 75,
 			first_slot_number: 0,
+			slot_duration_millis: Duration::from_millis(1000),
 		}
 	}
 
@@ -181,6 +186,7 @@ mod tests {
 			epoch_duration_millis: Duration::from_millis(5 * 24 * 60 * 60 * 1000),
 			first_epoch_number: 4,
 			first_slot_number: 86400,
+			slot_duration_millis: Duration::from_millis(1000),
 		}
 	}
 

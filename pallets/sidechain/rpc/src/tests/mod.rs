@@ -24,6 +24,7 @@ mod get_status_tests {
 			epoch_duration_millis: Duration::from_millis(120_000),
 			first_epoch_number: 50,
 			first_slot_number: 501,
+			slot_duration_millis: Duration::from_millis(1000),
 		};
 		let mainchain_block = MainchainBlock {
 			number: McBlockNumber(1001),
@@ -82,6 +83,7 @@ mod get_status_tests {
 			epoch_duration_millis: Duration::from_millis(120_000),
 			first_epoch_number: 50,
 			first_slot_number: 501,
+			slot_duration_millis: Duration::from_millis(1000),
 		};
 
 		let api = SidechainRpc::new(

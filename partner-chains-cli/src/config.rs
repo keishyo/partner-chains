@@ -359,6 +359,7 @@ impl From<CardanoParameters> for sidechain_domain::mainchain_epoch::MainchainEpo
 			epoch_duration_millis: Duration::from_millis(value.epoch_duration_millis),
 			first_epoch_number: value.first_epoch_number,
 			first_slot_number: value.first_slot_number,
+			slot_duration_millis: Duration::from_millis(1000),
 		}
 	}
 }
