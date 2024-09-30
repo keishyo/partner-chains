@@ -23,7 +23,7 @@ std = [
 	"sidechain-domain/std",
 	"main-chain-follower-api/std",
 	"rand/std",
-	"sp-native-token-management/std"
+	"sp-native-token-management?/std"
 ]
 block-source = ["main-chain-follower-api/block-source"]
 candidate-source = ["main-chain-follower-api/candidate-source"]
