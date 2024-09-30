@@ -49,17 +49,17 @@ runs:
           rustup target add x86_64-unknown-linux-gnu
           cargo build -p partner-chains-node --locked --release --target x86_64-unknown-linux-gnu
           cp target/x86_64-unknown-linux-gnu/release/partner-chains-node $PARTNER_CHAINS_NODE
-          chmod +x $PARTNER_CHAINS_NODE  # Added chmod command
+          chmod +x $PARTNER_CHAINS_NODE
         elif [[ "${{ inputs.os }}" == "macos-x86_64" ]]; then
           rustup target add x86_64-apple-darwin
           cargo build -p partner-chains-node --locked --release --target x86_64-apple-darwin
           cp target/x86_64-apple-darwin/release/partner-chains-node $PARTNER_CHAINS_NODE
-          chmod +x $PARTNER_CHAINS_NODE  # Added chmod command
+          chmod +x $PARTNER_CHAINS_NODE
         elif [[ "${{ inputs.os }}" == "macos-arm64" ]]; then
           rustup target add aarch64-apple-darwin
           cargo build -p partner-chains-node --locked --release --target aarch64-apple-darwin
           cp target/aarch64-apple-darwin/release/partner-chains-node $PARTNER_CHAINS_NODE
-          chmod +x $PARTNER_CHAINS_NODE  # Added chmod command
+          chmod +x $PARTNER_CHAINS_NODE
         fi
 
     - name: Build partner-chains-cli
@@ -70,17 +70,17 @@ runs:
           rustup target add x86_64-unknown-linux-gnu
           cargo build -p partner-chains-cli --locked --release --target x86_64-unknown-linux-gnu
           cp target/x86_64-unknown-linux-gnu/release/partner-chains-cli $PARTNER_CHAINS_CLI
-          chmod +x $PARTNER_CHAINS_CLI  # Added chmod command
+          chmod +x $PARTNER_CHAINS_CLI
         elif [[ "${{ inputs.os }}" == "macos-x86_64" ]]; then
           rustup target add x86_64-apple-darwin
           cargo build -p partner-chains-cli --locked --release --target x86_64-apple-darwin
           cp target/x86_64-apple-darwin/release/partner-chains-cli $PARTNER_CHAINS_CLI
-          chmod +x $PARTNER_CHAINS_CLI  # Added chmod command
+          chmod +x $PARTNER_CHAINS_CLI
         elif [[ "${{ inputs.os }}" == "macos-arm64" ]]; then
           rustup target add aarch64-apple-darwin
           cargo build -p partner-chains-cli --locked --release --target aarch64-apple-darwin
           cp target/aarch64-apple-darwin/release/partner-chains-cli $PARTNER_CHAINS_CLI
-          chmod +x $PARTNER_CHAINS_CLI  # Added chmod command
+          chmod +x $PARTNER_CHAINS_CLI
         fi
 
     - name: Upload partner-chains-cli artifact
