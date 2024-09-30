@@ -34,7 +34,6 @@ jobs:
       - name: Build and Upload for Linux
         uses: ./.github/actions/artifacts/build-pc-artifacts
         with:
-          sha: ${{ inputs.sha }}
           tag: ${{ inputs.tag }}
           os: linux
 
@@ -47,11 +46,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: master 
+          ref: ${{ inputs.sha }} 
       - name: Build and Upload for macOS x86_64
         uses: ./.github/actions/artifacts/build-pc-artifacts
         with:
-          sha: ${{ inputs.sha }}
           tag: ${{ inputs.tag }}
           os: macos-x86_64
 
@@ -64,11 +62,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: master 
+          ref: ${{ inputs.sha }}
       - name: Build and Upload for macOS arm64
         uses: ./.github/actions/artifacts/build-pc-artifacts
         with:
-          sha: ${{ inputs.sha }}
           tag: ${{ inputs.tag }}
           os: macos-arm64
 
