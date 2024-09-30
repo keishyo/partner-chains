@@ -21,40 +21,40 @@ runs:
         echo "PARTNER_CHAINS_NODE_AARCH64_APPLE_DARWIN=partner-chains-node-${{ inputs.tag }}-aarch64-apple-darwin" >> $GITHUB_ENV
       shell: bash
 
-    - name: Download Linux CLI artifact
+    - name: Download partner-chains-cli-linux-artifact
       uses: actions/download-artifact@v4
       with:
-        name: ${{ env.PARTNER_CHAINS_CLI_X86_64_LINUX }}
+        name: partner-chains-cli-linux-artifact
         path: artifact-linux/
 
-    - name: Download Linux NODE artifact
+    - name: Download partner-chains-node-linux-artifact
       uses: actions/download-artifact@v4
       with:
-        name: ${{ env.PARTNER_CHAINS_NODE_X86_64_LINUX }}
+        name: partner-chains-node-linux-artifact
         path: artifact-linux/
 
-    - name: Download macOS x86_64 CLI artifact
+    - name: Download partner-chains-node-macos-x86_64-artifact
       uses: actions/download-artifact@v4
       with:
-        name: ${{ env.PARTNER_CHAINS_CLI_X86_64_APPLE_DARWIN }}
+        name: partner-chains-node-macos-x86_64-artifact
         path: artifact-macos-x86_64/
 
-    - name: Download macOS x86_64 NODE artifact
+    - name: Download partner-chains-node-macos-x86_64-artifact
       uses: actions/download-artifact@v4
       with:
-        name: ${{ env.PARTNER_CHAINS_NODE_X86_64_APPLE_DARWIN }}
+        name: partner-chains-node-macos-x86_64-artifact
         path: artifact-macos-x86_64/
 
-    - name: Download macOS ARM64 CLI artifact
+    - name: Download partner-chains-node-macos-arm64-artifact
       uses: actions/download-artifact@v4
       with:
-        name: ${{ env.PARTNER_CHAINS_CLI_AARCH64_APPLE_DARWIN }}
+        name: partner-chains-node-macos-arm64-artifact
         path: artifact-macos-arm64/
 
-    - name: Download macOS ARM64 NODE artifact
+    - name: Download partner-chains-node-macos-arm64-artifact
       uses: actions/download-artifact@v4
       with:
-        name: ${{ env.PARTNER_CHAINS_NODE_AARCH64_APPLE_DARWIN }}
+        name: partner-chains-node-macos-arm64-artifact
         path: artifact-macos-arm64/
 
     - name: Check if release already exists

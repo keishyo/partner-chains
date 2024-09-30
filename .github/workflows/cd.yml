@@ -30,7 +30,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: master 
+          ref: ${{ inputs.sha }}
       - name: Build and Upload for Linux
         uses: ./.github/actions/artifacts/build-pc-artifacts
         with:
