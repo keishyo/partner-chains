@@ -4,6 +4,9 @@ inputs:
   tag:
     description: "partner-chains release tag to append to artifact name"
     required: true
+  sha:
+    description: "Commit SHA to checkout"
+    required: true
   os:
     description: "Operating system for the build (linux, macos-x86_64, macos-arm64)"
     required: true
@@ -11,6 +14,10 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.sha }} 
     - name: Set filename variables
       shell: bash
       run: |

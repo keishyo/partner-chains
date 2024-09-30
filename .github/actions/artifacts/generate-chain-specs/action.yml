@@ -1,8 +1,11 @@
 name: "Generate Chain Specs from Node Binary"
 description: "Downloads the partner-chains node binary, generates chain specs for different environments, and uploads them."
 inputs:
+  tag:
+    description: "partner-chains release tag to append to artifact name"
+    required: true
   sha:
-    description: "Commit SHA to append to chain spec secret name"
+    description: "Commit SHA to checkout"
     required: true
 
 runs:
@@ -13,18 +16,16 @@ runs:
       with:
         name: partner-chains-node-linux-artifact
         path: ./
-
     - name: Generate Chain Specs
       shell: bash
       run: |
-        chmod +x ./partner-chains-node
+        chmod +x partner-chains-cli-${{ inputs.tag }}-x86_64-linux
         source ./envs/devnet/.envrc
-        ./partner-chains-node build-spec --chain local --disable-default-bootnode --raw > devnet_chain_spec.json
+        ./partner-chains-cli-${{ inputs.tag }}-x86_64-linux build-spec --chain local --disable-default-bootnode --raw > devnet_chain_spec.json
         source ./envs/staging-preview/.envrc
-        ./partner-chains-node build-spec --chain staging --disable-default-bootnode --raw > staging_preview_chain_spec.json
+        ./partner-chains-cli-${{ inputs.tag }}-x86_64-linux build-spec --chain staging --disable-default-bootnode --raw > staging_preview_chain_spec.json
         source ./envs/staging-preprod/.envrc
-        ./partner-chains-node build-spec --chain staging --disable-default-bootnode --raw > staging_preprod_chain_spec.json
-
+        ./partner-chains-cli-${{ inputs.tag }}-x86_64-linux build-spec --chain staging --disable-default-bootnode --raw > staging_preprod_chain_spec.json
     - name: Upload Chain Specs
       uses: actions/upload-artifact@v4
       with:
