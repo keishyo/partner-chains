@@ -1,4 +1,4 @@
-use crate::db_model::{Address, NativeTokenAmount, SlotNumber};
+use crate::db_model::{NativeTokenAmount, SlotNumber};
 use crate::metrics::McFollowerMetrics;
 use crate::observed_async_trait;
 use async_trait::async_trait;
@@ -37,11 +37,8 @@ impl NativeTokenManagementDataSource for NativeTokenManagementDataSourceImpl {
 			&self.pool,
 			after_slot,
 			to_slot,
-			crate::db_model::Asset {
-				policy_id: native_token_policy_id.into(),
-				asset_name: native_token_asset_name.into(),
-			},
-			Address(illiquid_supply_address.to_string()),
+			crate::db_model::Asset::new_from(native_token_policy_id, native_token_asset_name),
+			illiquid_supply_address.into(),
 		)
 		.await?;
 

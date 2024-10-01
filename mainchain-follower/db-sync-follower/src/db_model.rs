@@ -77,6 +77,13 @@ impl Asset {
 	pub(crate) fn new(policy_id: sidechain_domain::PolicyId) -> Self {
 		Self { policy_id: PolicyId(policy_id.0.to_vec()), asset_name: AssetName(vec![]) }
 	}
+
+	pub(crate) fn new_from(
+		policy_id: sidechain_domain::PolicyId,
+		asset_name: sidechain_domain::AssetName,
+	) -> Self {
+		Self { policy_id: policy_id.into(), asset_name: asset_name.into() }
+	}
 }
 
 #[derive(Debug, Clone, sqlx::FromRow, PartialEq)]
@@ -137,6 +144,12 @@ impl From<EpochNumberRow> for EpochNumber {
 
 #[derive(Debug, Clone, sqlx::FromRow, PartialEq)]
 pub(crate) struct Address(pub String);
+
+impl From<MainchainAddress> for Address {
+	fn from(addr: MainchainAddress) -> Self {
+		Self(addr.to_string())
+	}
+}
 
 #[derive(Debug, Clone, sqlx::FromRow, PartialEq)]
 pub(crate) struct MainchainEpochNonce(pub Vec<u8>);
