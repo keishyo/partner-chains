@@ -2,10 +2,7 @@ name: "Generate Chain Specs from Node Binary"
 description: "Downloads the partner-chains node binary, generates chain specs for different environments, and uploads them."
 inputs:
   tag:
-    description: "partner-chains release tag to append to artifact name"
-    required: true
-  sha:
-    description: "Commit SHA to checkout"
+    description: "Node tag"
     required: true
 
 runs:
