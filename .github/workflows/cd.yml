@@ -151,7 +151,7 @@ jobs:
         uses: ./.github/actions/deploy/deploy-staging-preview
         with:
           image: ${{ secrets.ECR_REGISTRY_SECRET }}/substrate-node:${{ inputs.sha }}
-          chain-spec-secret: ${{ inputs.chain-spec-secret }}
+          sha: ${{ github.sha }}
         env:
           AWS_REGION: "eu-central-1"
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
