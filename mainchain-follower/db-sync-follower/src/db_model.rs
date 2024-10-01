@@ -577,6 +577,13 @@ pub(crate) async fn index_exists(pool: &Pool<Postgres>, index_name: &str) -> boo
 		.unwrap()
 }
 
+#[derive(Debug, Clone, sqlx::FromRow, PartialEq)]
+pub struct NativeTokenTransfer {
+	pub quantity: NativeTokenAmount,
+	pub slot_no: SlotNumber,
+	pub hash: [u8; 32],
+}
+
 #[cfg(feature = "native-token")]
 pub(crate) async fn get_total_native_tokens_transfered(
 	pool: &Pool<Postgres>,
@@ -584,11 +591,13 @@ pub(crate) async fn get_total_native_tokens_transfered(
 	to_slot: SlotNumber,
 	asset: Asset,
 	illiquid_supply_address: Address,
-) -> Result<Option<NativeTokenAmount>, SqlxError> {
-	let query = sqlx::query_as::<_, (Option<NativeTokenAmount>,)>(
+) -> Result<Vec<NativeTokenTransfer>, SqlxError> {
+	let query = sqlx::query_as::<_, NativeTokenTransfer>(
 		"
 SELECT
-    SUM(ma_tx_out.quantity)
+	ma_tx_out.quantity,
+	block.slot_no,
+    block.hash
 FROM tx_out
 LEFT JOIN ma_tx_out    ON ma_tx_out.tx_out_id = tx_out.id
 LEFT JOIN multi_asset  ON multi_asset.id = ma_tx_out.ident
@@ -606,5 +615,5 @@ AND $4 < block.slot_no AND block.slot_no <= $5;
 	.bind(after_slot)
 	.bind(to_slot);
 
-	Ok(query.fetch_one(pool).await?.0)
+	Ok(query.fetch_all(pool).await?)
 }

@@ -1,9 +1,9 @@
-use crate::db_model::{NativeTokenAmount, SlotNumber};
+use crate::db_model::SlotNumber;
 use crate::metrics::McFollowerMetrics;
 use crate::observed_async_trait;
 use async_trait::async_trait;
 use main_chain_follower_api::{DataSourceError, NativeTokenManagementDataSource, Result};
-use sidechain_domain::*;
+use sidechain_domain::{NativeTokenAmount, *};
 use sqlx::PgPool;
 
 #[cfg(test)]
@@ -33,7 +33,7 @@ impl NativeTokenManagementDataSource for NativeTokenManagementDataSourceImpl {
 			get_to_slot(to_block, &self.pool)
 		)?;
 
-		let total_transfer = crate::db_model::get_total_native_tokens_transfered(
+		let transfers = crate::db_model::get_total_native_tokens_transfered(
 			&self.pool,
 			after_slot,
 			to_slot,
@@ -42,7 +42,9 @@ impl NativeTokenManagementDataSource for NativeTokenManagementDataSourceImpl {
 		)
 		.await?;
 
-		Ok(total_transfer.unwrap_or(NativeTokenAmount(0)).into())
+		let total_transfer = transfers.iter().map(|tr| tr.quantity.0).sum();
+
+		Ok(NativeTokenAmount(total_transfer))
 	}
 }
 );
