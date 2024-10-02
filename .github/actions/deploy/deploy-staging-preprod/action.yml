@@ -105,6 +105,6 @@ runs:
         kubectl get pod staging-preprod-validator-3 -n staging-preprod -o jsonpath="{.status.containerStatuses[*].ready}"
         echo "Checking staging-preprod-validator-4..."
         kubectl get pod staging-preprod-validator-4 -n staging-preprod -o jsonpath="{.status.containerStatuses[*].ready}"
-        kubectl get pods -n sc -o custom-columns='NAME:.metadata.name,READY:.status.containerStatuses[*].ready' | grep -E '^(staging-preprod-validator-1|staging-preprod-validator-2|staging-preprod-validator-3|staging-preprod-validator-4)' | awk '{if ($2 != "true,true,true,true") exit 1}'
+        kubectl get pods -n staging-preprod -o custom-columns='NAME:.metadata.name,READY:.status.containerStatuses[*].ready' | grep -E '^(staging-preprod-validator-1|staging-preprod-validator-2|staging-preprod-validator-3|staging-preprod-validator-4)' | awk '{if ($2 != "true,true,true,true") exit 1}'
         echo "All pods are 4/4 up and ready"
       shell: bash
