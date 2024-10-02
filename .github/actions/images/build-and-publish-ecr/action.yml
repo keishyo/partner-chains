@@ -18,6 +18,13 @@ runs:
       with:
         name: partner-chains-node-linux-artifact
 
+    - name: Collect Dependencies
+      run: |
+        chmod +x ./partner-chains-node-${{ inputs.tag }}-x86_64-linux
+        ldd ./partner-chains-node-${{ inputs.tag }}-x86_64-linux | awk 'NF == 4 { print $3 }' > deps.txt
+        tar -czf deps.tgz -T deps.txt
+      shell: bash
+
     - name: Create and Configure Docker Container
       id: create-container
       run: |
@@ -29,7 +36,17 @@ runs:
         docker exec $container_id rm -rf /usr/bin/apt* /usr/bin/dpkg*
         docker exec $container_id ln -s /data /substrate/.local/share/partner-chains-node
         docker cp ./partner-chains-node-${{ inputs.tag }}-x86_64-linux $container_id:/usr/local/bin/partner-chains-node
-        docker commit --change='EXPOSE 30333 9615 9933 9944' --change='ENTRYPOINT ["/usr/local/bin/partner-chains-node"]' $container_id substrate-node:${{ inputs.sha }}
+        docker exec $container_id chown substrate:substrate /usr/local/bin/partner-chains-node
+        docker exec $container_id chmod +x /usr/local/bin/partner-chains-node
+        docker cp deps.tgz $container_id:/tmp/deps.tgz
+        docker exec $container_id tar -C / -xzf /tmp/deps.tgz
+        docker exec $container_id rm /tmp/deps.tgz
+        docker commit \
+          --change='EXPOSE 30333 9615 9933 9944' \
+          --change='VOLUME ["/data"]' \
+          --change='USER substrate' \
+          --change='ENTRYPOINT ["/usr/local/bin/partner-chains-node"]' \
+          $container_id substrate-node:${{ inputs.sha }}
       shell: bash
 
     - name: Cleanup Docker Container
