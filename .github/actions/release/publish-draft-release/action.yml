@@ -21,7 +21,7 @@ runs:
       run: |
         set -e
         tag="${{ inputs.tag }}"
-        release_response=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+        release_response=$(curl -s -H "Authorization: token ${{ env.GITHUB_TOKEN }} \
           "https://api.github.com/repos/${{ github.repository }}/releases/tags/$tag")
 
         if echo "$release_response" | grep -q '"message": "Not Found"'; then
@@ -39,7 +39,7 @@ runs:
       run: |
         set -e
         release_id="${{ steps.check_release.outputs.release_id }}"
-        response=$(curl -s -X PATCH -H "Authorization: token $GITHUB_TOKEN" \
+        response=$(curl -s -X PATCH -H "Authorization: token ${{ env.GITHUB_TOKEN }}" \
           -d '{"draft": false}' \
           "https://api.github.com/repos/${{ github.repository }}/releases/$release_id")
         echo "Response: $response"
