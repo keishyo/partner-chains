@@ -47,7 +47,7 @@ runs:
 
     - name: Build Docker Image
       run: |
-        docker build -t substrate-node:${{ inputs.sha }} .
+        docker build -t substrate-node:latest
       shell: bash
 
     - name: Login to GitHub Container Registry
@@ -62,17 +62,12 @@ runs:
 
     - name: Tag and Push Image to GHCR
       run: |
-        repository_name="${GITHUB_REPOSITORY##*/}"
-        target_image="ghcr.io/${{ github.repository }}/$repository_name-node"
-        commit_sha="${{ inputs.sha }}"
-        custom_tag="${{ inputs.tag }}"
+        docker tag substrate-node:latest ghcr.io/${{ github.repository }}/partner-chains-node:latest
+        docker tag substrate-node:latest ghcr.io/${{ github.repository }}/partner-chains-node:${{ inputs.sha }}
+        docker tag substrate-node:latest ghcr.io/${{ github.repository }}/partner-chains-node:${{ inputs.tag }}
 
-        docker tag ghcr-image:latest $target_image:latest
-        docker tag ghcr-image:latest $target_image:$commit_sha
-        docker tag ghcr-image:latest $target_image:$custom_tag
-
-        docker push $target_image:latest
-        docker push $target_image:$commit_sha
-        docker push $target_image:$custom_tag
+        docker push ghcr.io/${{ github.repository }}/partner-chains-node:latest
+        docker push ghcr.io/${{ github.repository }}/partner-chains-node:${{ inputs.sha }}
+        docker push ghcr.io/${{ github.repository }}/partner-chains-node:${{ inputs.tag }}
       shell: bash
 
