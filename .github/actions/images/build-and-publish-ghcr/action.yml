@@ -50,18 +50,12 @@ runs:
         docker build -t substrate-node:${{ inputs.sha }} .
       shell: bash
 
-    - name: Acquire AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        role-to-assume: ${{ env.AWS_ROLE_ARN_SECRET }}
-        aws-region: ${{ env.AWS_REGION }}
-
     - name: Login to GitHub Container Registry
       uses: docker/login-action@v3
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        password: ${{ env.GITHUB_TOKEN }}
       env:
         SSH_AUTH_SOCK: /tmp/ssh_agent.sock
         FORCE_COLOR: 1
