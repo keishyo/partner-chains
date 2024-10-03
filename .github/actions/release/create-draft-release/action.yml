@@ -115,3 +115,57 @@ runs:
             "https://uploads.github.com/repos/${{ github.repository }}/releases/$release_id/assets?name=$(basename $artifact)"
         done
       shell: bash
+
+    - name: Modify Release Notes
+      id: modify_release_notes
+      run: |
+        release_id="${{ steps.create_release.outputs.release_id }}"
+        if [ -z "$release_id" ]; then
+          release_id="${{ steps.check_release.outputs.release_id }}"
+        fi
+
+        # Fetch the existing release notes
+        release_data=$(curl -s -H "Authorization: token ${{ env.GITHUB_TOKEN }}" \
+          "https://api.github.com/repos/${{ github.repository }}/releases/$release_id")
+
+        # Extract the release body
+        release_body=$(echo "$release_data" | jq -r .body)
+
+        # Process the release notes
+        # Rename "## What's Changed" to "## Commits in this Release"
+        # Limit the entries under this section to the first 10
+        # Wrap the rest under a collapsible "Show more" section
+
+        # Extract sections
+        before_whats_changed=$(echo "$release_body" | sed -n '1,/## What.s Changed/p' | sed '$d')
+        whats_changed_section=$(echo "$release_body" | sed -n '/## What.s Changed/,/^## /p' | sed '1d;$d')
+        after_whats_changed=$(echo "$release_body" | sed -n '/^## New Contributors/,$p')
+
+        # Limit "What's Changed" to first 10 entries
+        IFS=$'\n' read -rd '' -a entries <<<"$whats_changed_section"
+        total_entries=${#entries[@]}
+
+        if [ "$total_entries" -gt 10 ]; then
+          first_10_entries="${entries[@]:0:10}"
+          remaining_entries="${entries[@]:10}"
+          remaining_entries_str=$(printf "%s\n" "${remaining_entries[@]}")
+          details_section="\n<details>\n<summary>Show more</summary>\n\n$remaining_entries_str\n</details>\n"
+        else
+          first_10_entries="${entries[@]}"
+          details_section=""
+        fi
+
+        # Rename "What's Changed" to "Commits in this Release"
+        modified_whats_changed="## Commits in this Release\n\n"
+        modified_whats_changed+=$(printf "%s\n" "${first_10_entries[@]}")
+        modified_whats_changed+="$details_section"
+
+        # Combine all parts
+        modified_release_body="$before_whats_changed\n$modified_whats_changed\n$after_whats_changed"
+
+        # Update the release with modified release notes
+        curl -s -X PATCH -H "Authorization: token ${{ env.GITHUB_TOKEN }}" \
+          -H "Content-Type: application/json" \
+          -d '{"body": "'"${modified_release_body//\"/\\\"}"'"}' \
+          "https://api.github.com/repos/${{ github.repository }}/releases/$release_id"
+      shell: bash
