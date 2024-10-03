@@ -202,9 +202,8 @@ jobs:
           sha: ${{ inputs.sha }}
           tag: ${{ inputs.tag }}
         env:
-          AWS_REGION: "eu-central-1"
+          GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SSH_KEY: ${{ secrets.SUBSTRATE_REPO_SSH_KEY }}
 
   publish-release:
     permissions:
