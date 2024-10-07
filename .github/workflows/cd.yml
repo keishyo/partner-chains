@@ -38,37 +38,37 @@ jobs:
           tag: ${{ inputs.tag }}
           os: linux
 
-#  build-macos-x86_64:
-#    permissions:
-#      id-token: write
-#      contents: write
-#    runs-on: macos-latest
-#    steps:
-#      - name: Checkout
-#        uses: actions/checkout@v4
-#        with:
-#          ref: ${{ inputs.sha }} 
-#      - name: Build and Upload for macOS x86_64
-#        uses: ./.github/actions/artifacts/build-pc-artifacts
-#        with:
-#          tag: ${{ inputs.tag }}
-#          os: macos-x86_64
-#
-#  build-macos-arm64:
-#    permissions:
-#      id-token: write
-#      contents: write
-#    runs-on: macos-latest
-#    steps:
-#      - name: Checkout
-#        uses: actions/checkout@v4
-#        with:
-#          ref: ${{ inputs.sha }}
-#      - name: Build and Upload for macOS arm64
-#        uses: ./.github/actions/artifacts/build-pc-artifacts
-#        with:
-#          tag: ${{ inputs.tag }}
-#          os: macos-arm64
+  build-macos-x86_64:
+    permissions:
+      id-token: write
+      contents: write
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.sha }} 
+      - name: Build and Upload for macOS x86_64
+        uses: ./.github/actions/artifacts/build-pc-artifacts
+        with:
+          tag: ${{ inputs.tag }}
+          os: macos-x86_64
+
+  build-macos-arm64:
+    permissions:
+      id-token: write
+      contents: write
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.sha }}
+      - name: Build and Upload for macOS arm64
+        uses: ./.github/actions/artifacts/build-pc-artifacts
+        with:
+          tag: ${{ inputs.tag }}
+          os: macos-arm64
 #
 #  build-and-publish-ecr:
 #    permissions:
@@ -94,8 +94,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    needs: [build-linux]
-    #needs: [build-linux, build-macos-x86_64, build-macos-arm64]
+    needs: [build-linux, build-macos-x86_64, build-macos-arm64]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
