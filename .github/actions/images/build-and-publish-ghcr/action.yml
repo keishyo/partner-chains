@@ -56,9 +56,7 @@ runs:
         registry: ghcr.io
         username: ${{ env.GITHUB_ACTOR }}
         password: ${{ env.GITHUB_TOKEN }}
-      env:
-        SSH_AUTH_SOCK: /tmp/ssh_agent.sock
-        FORCE_COLOR: 1
+        logout: true
 
     - name: Tag and Push Image to GHCR
       run: |
