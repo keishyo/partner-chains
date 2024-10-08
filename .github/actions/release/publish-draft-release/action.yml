@@ -1,5 +1,5 @@
 name: "Publish Release"
-description: "Publishes a GitHub release from draft status."
+description: "Publishes a GitHub release from draft status and updates release notes."
 inputs:
   tag:
     description: "Tag for the release"
@@ -40,14 +40,42 @@ runs:
         set -e
         if [[ "${{ steps.check_release.outputs.release_exists }}" == "true" ]]; then
           release_id="${{ steps.check_release.outputs.release_id }}"
+          
+          # Set draft to false
           response=$(curl -s -X PATCH -H "Authorization: token ${{ env.GITHUB_TOKEN }}" \
             -d '{"draft": false}' \
             "https://api.github.com/repos/${{ github.repository }}/releases/$release_id")
+          
           echo "Response: $response"
+          
+          # Verify the release was updated
           if echo "$response" | jq -e '.id' >/dev/null; then
             echo "Release updated successfully"
           else
             echo "Failed to update release"
+            exit 1
+          fi
+          
+          # Extract the current release body
+          current_body=$(echo "$response" | jq -r .body)
+          
+          # Perform the desired replacements
+          updated_body=$(echo "$current_body" | \
+            sed 's/- \[ \] Staging preview environment/- [x] Staging preview environment/g' | \
+            sed 's/This is a draft pre-release/This is a pre-release/g')
+          
+          # Update the release body with the modified content
+          updated_response=$(curl -s -X PATCH -H "Authorization: token ${{ env.GITHUB_TOKEN }}" \
+            -d '{"body": "'"$updated_body"'"}' \
+            "https://api.github.com/repos/${{ github.repository }}/releases/$release_id")
+          
+          echo "Body Update Response: $updated_response"
+          
+          # Verify the release body was updated
+          if echo "$updated_response" | jq -e '.body' >/dev/null; then
+            echo "Release body updated successfully"
+          else
+            echo "Failed to update release body"
             exit 1
           fi
         else
